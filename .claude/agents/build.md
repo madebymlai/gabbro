@@ -32,7 +32,7 @@ For each task:
 
 ## Quality Gate (Per Task, Before Marking Complete)
 
-- [ ] TDD cycle followed — tests written first, all passing
+- [ ] No code change without a prior failing test. Non-code tasks (config, docs, deps) are exempt.
 - [ ] All acceptance criteria met
 - [ ] Principles honored (see `principles.md`) — no magic numbers, no swallowed errors, SRP respected
 - [ ] Module boundaries respected
