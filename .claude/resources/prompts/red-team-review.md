@@ -20,6 +20,19 @@ Note anything else you spot, but spend your energy on these.
 **Filesystem** (read-only codebase access):
 - `read_file`, `read_multiple_files`, `search_files`, `list_directory`, `get_file_info`, `list_allowed_directories`
 
+**Codebase Memory** (structural knowledge graph):
+- `index_repository` — index or re-index the repo into the graph
+- `index_status` — check indexing status
+- `list_projects` — list all indexed projects
+- `search_graph` — structured search by label, name, file pattern, degree
+- `search_code` — grep-like text search within indexed files
+- `get_code_snippet` — read source code for a function by qualified name
+- `trace_call_path` — BFS traversal of function call chains (depth 1-5)
+- `detect_changes` — map git diff to affected symbols + blast radius
+- `query_graph` — execute Cypher-like read-only graph queries
+- `get_graph_schema` — return node/edge counts and relationship patterns
+- `get_architecture` — codebase overview: languages, packages, hotspots, clusters
+
 **Context7** (library documentation and security references):
 - `resolve-library-id`, `query-docs`
 - Query `/owasp/top10` to validate against OWASP Top 10:2025 categories

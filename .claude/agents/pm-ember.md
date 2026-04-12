@@ -18,7 +18,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **description**: Read the source and target paths from your task description. Run the external agent:
   ```bash
   node .gabbro/external-agent.mjs \
-    --agent kimi-pmatch \
+    --agent pm-ember \
     --prompt .claude/resources/prompts/pattern-match.md \
     --output /tmp/pm-ember-$(date +%s).md \
     -- <source-doc-path> <target-doc-path>

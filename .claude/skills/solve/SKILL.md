@@ -32,7 +32,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 1: Clarify requirements
 
 - **activeForm**: Clarifying requirements
-- **description**: Start with dialog. The input is a brief, arch spec reference, or raw prompt — either way, extract what you need through conversation before analyzing.
+- **description**: Start with dialog. The input is a brief or raw prompt — either way, extract what you need through conversation before analyzing.
 
   **Probe for:**
 

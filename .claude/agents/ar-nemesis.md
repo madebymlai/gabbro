@@ -20,7 +20,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **description**: Read the target path from your task description. Run the external agent:
   ```bash
   node .gabbro/external-agent.mjs \
-    --agent glm5-review \
+    --agent ar-nemesis \
     --prompt .claude/resources/prompts/red-team-review.md \
     --output /tmp/ar-nemesis-$(date +%s).md \
     -- <target-path>

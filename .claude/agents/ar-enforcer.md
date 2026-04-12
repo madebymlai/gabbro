@@ -20,7 +20,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **description**: Read the target path from your task description. Run the external agent:
   ```bash
   node .gabbro/external-agent.mjs \
-    --agent kimi-review \
+    --agent ar-enforcer \
     --prompt .claude/resources/prompts/principles-enforcement.md \
     --output /tmp/ar-enforcer-$(date +%s).md \
     -- <target-path>

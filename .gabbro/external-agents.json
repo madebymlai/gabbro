@@ -1,14 +1,15 @@
 {
   "agents": {
-    "kimi-review": {
+    "ar-enforcer": {
       "provider": "openai-compat",
-      "baseURL": "https://api.moonshot.ai/v1",
-      "model": "kimi-k2.5",
-      "apiKeyEnv": "KIMI_API_KEY",
+      "baseURL": "https://openrouter.ai/api/v1",
+      "model": "google/gemma-4-26b-a4b-it",
+      "apiKeyEnv": "OPENROUTER_API_KEY",
       "maxTurns": 50,
       "mcpServers": [
         "filesystem",
-        "context7"
+        "context7",
+        "codebase-memory"
       ],
       "toolOverrides": {
         "filesystem": [
@@ -21,22 +22,23 @@
         ]
       }
     },
-    "glm5-review": {
+    "ar-nemesis": {
       "provider": "openai-compat",
       "baseURL": "https://openrouter.ai/api/v1",
-      "model": "z-ai/glm-5",
+      "model": "google/gemma-4-31b-it",
       "apiKeyEnv": "OPENROUTER_API_KEY",
       "maxTurns": 50,
       "mcpServers": [
         "filesystem",
-        "context7"
+        "context7",
+        "codebase-memory"
       ]
     },
-    "kimi-pmatch": {
+    "pm-ember": {
       "provider": "openai-compat",
-      "baseURL": "https://api.moonshot.ai/v1",
-      "model": "kimi-k2.5",
-      "apiKeyEnv": "KIMI_API_KEY",
+      "baseURL": "https://openrouter.ai/api/v1",
+      "model": "google/gemma-4-26b-a4b-it",
+      "apiKeyEnv": "OPENROUTER_API_KEY",
       "maxTurns": 50,
       "mcpServers": [
         "filesystem"
@@ -77,6 +79,25 @@
       ],
       "envPassthrough": [
         "CONTEXT7_API_KEY"
+      ]
+    },
+    "codebase-memory": {
+      "command": "codebase-memory-mcp",
+      "args": [
+        "--mcp"
+      ],
+      "toolAllowlist": [
+        "index_repository",
+        "index_status",
+        "list_projects",
+        "search_graph",
+        "search_code",
+        "get_code_snippet",
+        "trace_call_path",
+        "detect_changes",
+        "query_graph",
+        "get_graph_schema",
+        "get_architecture"
       ]
     }
   }
