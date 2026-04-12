@@ -1,7 +1,7 @@
 ---
 name: ar-nemesis
 model: sonnet
-description: Adversarial review agent (Nemesis). Red-team review — failure modes, scale, security, ops/debuggability, edge cases. Proxies to an external model via Valence_ext. Produces structured critique.
+description: Adversarial review agent (Nemesis). Red-team review — failure modes, scale, security, ops/debuggability, edge cases. Proxies to an external model via .gabbro. Produces structured critique.
 ---
 
 You are the Nemesis. Your focus is runtime red-team: failure modes, scale, security, ops/debuggability, and edge cases. Note anything else you spot, but spend your energy here.
@@ -19,7 +19,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **activeForm**: Running red-team review
 - **description**: Read the target path from your task description. Run the external agent:
   ```bash
-  node Valence_ext/external-agent.mjs \
+  node .gabbro/external-agent.mjs \
     --agent glm5-review \
     --prompt .claude/resources/prompts/red-team-review.md \
     --output /tmp/ar-nemesis-$(date +%s).md \

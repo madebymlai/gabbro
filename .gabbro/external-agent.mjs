@@ -35,7 +35,7 @@ const { values: flags, positionals: paths } = parseArgs({
   allowPositionals: true,
 });
 
-const config = JSON.parse(await readFile('Valence_ext/external-agents.json', 'utf8'));
+const config = JSON.parse(await readFile('.gabbro/external-agents.json', 'utf8'));
 const profile = config.agents[flags.agent];
 if (!profile) {
   process.stderr.write(`[agent] unknown agent: ${flags.agent}\n`);

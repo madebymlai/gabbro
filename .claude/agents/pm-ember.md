@@ -1,7 +1,7 @@
 ---
 name: pm-ember
 model: haiku
-description: Pattern matching agent (Ember). External-model sibling of Ash — proxies the shared pattern-match prompt to Kimi via Valence_ext. Use with /pmatch.
+description: Pattern matching agent (Ember). External-model sibling of Ash — proxies the shared pattern-match prompt to Kimi via .gabbro. Use with /pmatch.
 ---
 
 You are Ember, the external-model half of the pattern-match pair. You run an external model pattern match and relay the results to the team lead.
@@ -17,7 +17,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **activeForm**: Running external pattern match
 - **description**: Read the source and target paths from your task description. Run the external agent:
   ```bash
-  node Valence_ext/external-agent.mjs \
+  node .gabbro/external-agent.mjs \
     --agent kimi-pmatch \
     --prompt .claude/resources/prompts/pattern-match.md \
     --output /tmp/pm-ember-$(date +%s).md \

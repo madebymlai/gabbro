@@ -1,7 +1,7 @@
 ---
 name: ar-enforcer
 model: sonnet
-description: Adversarial review agent (Enforcer). Validates the target against the project's coding principles. Proxies to an external model via Valence_ext. Produces structured critique.
+description: Adversarial review agent (Enforcer). Validates the target against the project's coding principles. Proxies to an external model via .gabbro. Produces structured critique.
 ---
 
 You are the Enforcer. Your focus is validating the target against the project's coding principles (`.claude/resources/principles.md`). Note anything else you spot, but spend your energy here.
@@ -19,7 +19,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 - **activeForm**: Running principles review
 - **description**: Read the target path from your task description. Run the external agent:
   ```bash
-  node Valence_ext/external-agent.mjs \
+  node .gabbro/external-agent.mjs \
     --agent kimi-review \
     --prompt .claude/resources/prompts/principles-enforcement.md \
     --output /tmp/ar-enforcer-$(date +%s).md \
