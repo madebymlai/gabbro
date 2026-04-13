@@ -383,13 +383,14 @@ export function ensureGitignore() {
   let content = '';
   if (existsSync(gitignorePath)) {
     content = readFileSync(gitignorePath, 'utf8');
-    if (content.includes('.gabbro/')) {
-      return;
-    }
   }
-  const entry = content.endsWith('\n') || content === '' ? '.gabbro/\n' : '\n.gabbro/\n';
-  writeFileSync(gitignorePath, content + entry);
-  console.log(`  Added .gabbro/ to .gitignore`);
+  const entries = ['.gabbro/', '.tokf/'];
+  const missing = entries.filter(e => !content.includes(e));
+  if (!missing.length) return;
+  const block = missing.join('\n') + '\n';
+  const prefix = content === '' || content.endsWith('\n') ? '' : '\n';
+  writeFileSync(gitignorePath, content + prefix + block);
+  console.log(`  Added ${missing.join(', ')} to .gitignore`);
 }
 
 export function copyPrinciples() {
