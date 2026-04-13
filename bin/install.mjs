@@ -369,20 +369,6 @@ const EXTENSIONS_BLOCK = `extensions:
     timeout: 300
     bundled: true
   - type: stdio
-    name: filesystem
-    cmd: npx
-    args:
-      - "@modelcontextprotocol/server-filesystem"
-      - "."
-    timeout: 300
-    available_tools:
-      - read_file
-      - read_multiple_files
-      - search_files
-      - list_directory
-      - get_file_info
-      - list_allowed_directories
-  - type: stdio
     name: codebase-memory
     cmd: codebase-memory-mcp
     args:
