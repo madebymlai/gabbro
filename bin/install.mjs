@@ -611,6 +611,20 @@ async function main() {
   console.log('\nDone.');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url) || process.argv[1]?.endsWith('install.mjs')) {
+// Run main when executed directly. Skip when imported by another module (e.g. tests).
+// In ESM, compare realpath of argv[1] with realpath of this file to handle
+// symlinks and npx cache paths.
+import { realpathSync } from 'node:fs';
+
+function isMainModule() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   main();
 }
