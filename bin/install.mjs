@@ -611,6 +611,6 @@ async function main() {
   console.log('\nDone.');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] === fileURLToPath(import.meta.url) || process.argv[1]?.endsWith('install.mjs')) {
   main();
 }
