@@ -23,7 +23,6 @@ That's it. Run from any project directory. Works on Linux and macOS (tokf skippe
 | `/bugfest` | Structured debugging. Triage, root-cause, fix, ticket tracking |
 | `/tune` | Interactive setup of coding principles and tokf filters for your project |
 | `/denoise` | Post-implementation cleanup |
-| `/tdd` | Test-driven development cycle |
 
 **Agents** (used by skills, not invoked directly):
 
