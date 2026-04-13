@@ -2,7 +2,7 @@
 name: bugfest
 description: Debugging protocol. Triage, root-cause, and fix bugs. Creates tickets in .gabbro/artifacts/tickets/ with YAML manifest tracker. Use for known bugs, regressions, or unexpected behavior.
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__codebase-memory-mcp__search_graph, mcp__codebase-memory-mcp__search_code, mcp__codebase-memory-mcp__trace_path
 argument-hint: "[bug description or ticket ID or SEC- ticket path]"
 ---
 
@@ -28,7 +28,7 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
 - **Skip Task 1** (triage) and **Task 2** (ticket creation) — `/sec` already performed these.
 - Read the SEC- ticket in place. Security context fields (exploit scenario, threat category, confidence) are part of the ticket.
 - **Start at Task 3** (Establish context) — proceed through normal protocol from there.
-- If escalated, the SEC- ticket path is what gets handed to `/solve` or `/arch`.
+- If escalated, the SEC- ticket path is what gets handed to `/solve`.
 - On resolution, update **both**:
   1. The SEC- ticket's Resolution section
   2. The status in `.gabbro/artifacts/sec/tickets/manifest.yaml` (set to `resolved`)
@@ -99,25 +99,13 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
 - **activeForm**: Establishing context
 - **description**: Understand the system around the bug before diagnosing it. You need to know what *should* happen before you can find where it diverges.
 
-  **Source weights** (when sources conflict, higher weight wins):
-
-  ```yaml
-  source_weights:
-    - weight: 1.5
-      source: Local docs (project)
-      purpose: Module ARCs, per-file docs, existing patterns
-    - weight: 1.4
-      source: Library docs (Context7)
-      purpose: Platform behavior, API contracts
-    - weight: 1.0
-      source: Web search
-      purpose: Known issues, failure modes, similar bugs
-  ```
-
   **3.1 Map the affected area**
-  - Identify which module(s) the symptom touches
-  - Read relevant design docs in `.gabbro/artifacts/` for architecture context
-  - Read relevant tests — what's already covered?
+  Use codebase-memory-mcp to explore:
+  1. `mcp__codebase-memory-mcp__search_graph` — find modules/functions related to the symptom
+  2. `mcp__codebase-memory-mcp__trace_path` — trace call chains through the affected area
+  3. `mcp__codebase-memory-mcp__search_code` — find related patterns and tests
+
+  Also use Context7 for library docs and WebSearch for known issues.
 
   **3.2 Understand the contract**
   - What is this code supposed to do? What are the inputs and outputs?
@@ -196,10 +184,6 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
         signal: Internal subsystem design is wrong. Arch contract is fine, but subsystem can't deliver it with current internal structure.
         examples: [wrong data model, wrong algorithm choice, abstraction that can't handle actual data shape]
         route: /solve
-      - type: Arch-level flaw
-        signal: Macro decomposition is wrong. Wrong contract, wrong subsystem boundary, or constraint that can't hold.
-        examples: [subsystem needs data it has no contract to receive, circular dependency, physically impossible constraint]
-        route: /arch
   ```
 
   **The bar for escalation is high.** If the root cause can be fixed by changing code within the existing design — even if the fix is ugly, even if it reveals a test gap, even if it touches multiple files — it's a code defect. Escalate only when a code fix would be a patch over a structural problem that will recur.
@@ -211,13 +195,6 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
   2. Update the ticket status to `escalated` in `.gabbro/artifacts/tickets/manifest.yaml`
   3. Tell the user: *"Root cause is a design flaw in [subsystem]. Ticket expanded as a `/solve` brief."*
   4. Stop — do not proceed to Task 6.
-
-  **If arch-level flaw**:
-  1. Update the arch manifest (`.gabbro/artifacts/arch/[project].manifest.yaml`) — add notes to the affected subsystem describing the finding
-  2. Expand the ticket's Root Cause section with the architectural finding
-  3. Update the ticket status to `escalated` in `.gabbro/artifacts/tickets/manifest.yaml`
-  4. Tell the user: *"Root cause is an architecture-level flaw in [subsystem]. Arch manifest updated. This needs `/arch`."*
-  5. Stop — do not proceed to Task 6.
 
 ### Task 6: Design fix
 
@@ -267,7 +244,7 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
   Fill in the **Resolution** section:
   - What was changed (file list with one-line summaries)
   - Tests added or modified
-  - If the fix revealed something systemic (a pattern of bugs, a fragile module, missing test coverage), add a **Postmortem** note — that's signal for future `/arch` or `/solve` work
+  - If the fix revealed something systemic (a pattern of bugs, a fragile module, missing test coverage), add a **Postmortem** note — that's signal for future `/solve` work
 
   **8.2 Update manifest**
   Set ticket status to `resolved` in `.gabbro/artifacts/tickets/manifest.yaml`.
