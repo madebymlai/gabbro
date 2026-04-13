@@ -1,0 +1,14 @@
+{
+  "name": "gabbro",
+  "version": "1.0.0",
+  "description": "AI coding workflow — skills, agents, and tooling for Claude Code",
+  "bin": "bin/install.mjs",
+  "files": [
+    "bin/",
+    "skills/",
+    "agents/",
+    "resources/"
+  ],
+  "type": "module",
+  "license": "MIT"
+}
