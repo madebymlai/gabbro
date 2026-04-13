@@ -45,7 +45,8 @@ if (!process.env[profile.apiKeyEnv]) {
   process.stderr.write(`[agent] missing env var: ${profile.apiKeyEnv}\n`);
   process.exit(1);
 }
-const systemPrompt = await readFile(flags.prompt, 'utf8');
+const projectId = process.cwd().replace(/[/:]/g, '-').replace(/-{2,}/g, '-').replace(/^-|-$/g, '') || 'root';
+const systemPrompt = (await readFile(flags.prompt, 'utf8')).replaceAll('{{PROJECT_ID}}', projectId);
 const provider = getProvider(profile.provider);
 const log = (msg) => process.stderr.write(msg + '\n');
 

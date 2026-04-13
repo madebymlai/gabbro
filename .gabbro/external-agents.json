@@ -8,7 +8,6 @@
       "maxTurns": 50,
       "mcpServers": [
         "filesystem",
-        "context7",
         "codebase-memory"
       ],
       "toolOverrides": {
@@ -30,7 +29,6 @@
       "maxTurns": 50,
       "mcpServers": [
         "filesystem",
-        "context7",
         "codebase-memory"
       ]
     },
@@ -87,16 +85,11 @@
         "--mcp"
       ],
       "toolAllowlist": [
-        "index_repository",
-        "index_status",
-        "list_projects",
         "search_graph",
         "search_code",
         "get_code_snippet",
-        "trace_call_path",
-        "detect_changes",
+        "trace_path",
         "query_graph",
-        "get_graph_schema",
         "get_architecture"
       ]
     }

@@ -30,10 +30,14 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
 ---
 
-### Task 1: Explore project context
+### Task 1: Establish context
 
-- **activeForm**: Exploring project context
-- **description**: Before asking anything, skim the relevant project state — existing files, docs, recent commits — to understand where this request lands. Use the context to ask sharper questions. Do not dump a summary on the user.
+- **activeForm**: Establishing context
+- **description**: Before asking anything, use codebase-memory-mcp to orient quickly:
+  1. `mcp__codebase-memory-mcp__get_architecture` — project overview
+  2. `mcp__codebase-memory-mcp__search_graph` — find modules/functions related to the user's request
+
+  That's it — no deep exploration. Use the context to ask sharper questions. Do not dump a summary on the user.
 
 ### Task 2: Offer visual companion (if applicable)
 

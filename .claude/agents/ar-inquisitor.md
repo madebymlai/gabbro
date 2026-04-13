@@ -15,23 +15,14 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 ### Phase 1: Establish context
 
 - **activeForm**: Establishing context
-- **description**: Read the design document from your task description. Then ground yourself in project context before reviewing.
+- **description**: Read the design document from your task description. Then use codebase-memory-mcp to ground yourself in the project:
 
-  **Read the docs first** — they contain contracts and constraints that code alone won't reveal. Only parse implementation when docs are missing or ambiguous.
+  1. `mcp__codebase-memory-mcp__get_architecture` — get project overview (languages, packages, hotspots)
+  2. `mcp__codebase-memory-mcp__search_graph` — find functions/modules referenced in the target
+  3. `mcp__codebase-memory-mcp__trace_path` — trace call chains for any code paths the design touches
+  4. `mcp__codebase-memory-mcp__get_code_snippet` — read source for specific functions
 
-  ```yaml
-  System:
-    location: ARCHITECTURE_*.md
-    contains: Data flow, key patterns, module boundaries
-  Module:
-    location: README_*.md (backend), ARC_*.md (frontend)
-    contains: Module purpose, public API, dependencies
-  File:
-    location: docs_*/*.md
-    contains: Per-file implementation details
-  ```
-
-  Use Context7 for external library docs. Use WebSearch for recent issues and community knowledge.
+  Fall back to `Read`/`Glob`/`Grep` for config files, docs, or non-code content.
 
 ### Phase 2: First principles challenge
 
