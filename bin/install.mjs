@@ -399,6 +399,20 @@ export function writeEnvFile(keys) {
   console.log(`  API keys written to ${envPath}`);
 }
 
+export function ensureGitignore() {
+  const gitignorePath = resolve('.gitignore');
+  let content = '';
+  if (existsSync(gitignorePath)) {
+    content = readFileSync(gitignorePath, 'utf8');
+    if (content.includes('.gabbro/')) {
+      return;
+    }
+  }
+  const entry = content.endsWith('\n') || content === '' ? '.gabbro/\n' : '\n.gabbro/\n';
+  writeFileSync(gitignorePath, content + entry);
+  console.log(`  Added .gabbro/ to .gitignore`);
+}
+
 export function copyPrinciples() {
   const srcPath = resolve(__dir, '..', 'resources', 'templates', 'principles_template.yaml');
   const destPath = resolve('.gabbro', 'principles.yaml');
@@ -631,6 +645,7 @@ async function main() {
 
   // Project setup
   copyPrinciples();
+  ensureGitignore();
 
   console.log('\nDone.');
 }
