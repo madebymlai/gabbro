@@ -16,7 +16,7 @@ If the argument includes an arch spec or other upstream context, work within tho
 
 ### SEC- Ticket Handling
 
-When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
+When input is a SEC- ticket path (matches `.claude/artifacts/sec/tickets/SEC-*`):
 - The ticket's **Root Cause** and security context (exploit scenario, threat category, affected surface) are the brief.
 - Security context fields inform constraint extraction — treat **threat category** and **exploit scenario** as hard constraints.
 - Proceed through normal protocol from Task 1 (Clarify requirements).
@@ -108,7 +108,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   ```yaml
   context_checks:
     - scope: System-level
-      check: PROCESS_DOCS/ for existing designs and architecture
+      check: .claude/artifacts/ for existing designs and architecture
     - scope: Module-level
       check: Module READMEs or docs_*/ARC_*.md within modules
     - scope: Component-level
@@ -178,7 +178,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 6: Write design document
 
 - **activeForm**: Writing design document
-- **description**: Save to `PROCESS_DOCS/solutions/NN-[solution-name].md` (e.g., `03-user-auth.md`). Check existing files in the directory to determine the next number.
+- **description**: Save to `.claude/artifacts/solutions/NN-[solution-name].md` (e.g., `03-user-auth.md`). Check existing files in the directory to determine the next number.
 
   **Required Sections:**
 
@@ -216,5 +216,5 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ## Handoff
 
 When the design document is written, suggest next steps:
-- `/ar PROCESS_DOCS/solutions/NN-[name].md` — adversarial review to stress-test the design
-- `/breakdown PROCESS_DOCS/solutions/NN-[name].md` — execution planning (after `/ar` approval)
+- `/ar .claude/artifacts/solutions/NN-[name].md` — adversarial review to stress-test the design
+- `/breakdown .claude/artifacts/solutions/NN-[name].md` — execution planning (after `/ar` approval)

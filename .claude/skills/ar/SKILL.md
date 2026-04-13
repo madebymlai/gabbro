@@ -113,7 +113,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 ### Task 10: Write adversarial review report
 
 - **activeForm**: Writing report
-- **description**: Write the report to `PROCESS_DOCS/reviews/ar_NN_[design_doc].md` using the template at `.claude/resources/ar_report_template.md`. Each Critical and Recommended finding MUST include its cost/benefit assessment.
+- **description**: Write the report to `.claude/artifacts/reviews/ar_NN_[design_doc].md` using the template at `.claude/resources/ar_report_template.md`. Each Critical and Recommended finding MUST include its cost/benefit assessment.
 
 ---
 

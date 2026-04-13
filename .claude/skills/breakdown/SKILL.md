@@ -38,12 +38,12 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 3: Write execution documents
 
 - **activeForm**: Writing execution documents
-- **description**: Use the template at `.claude/resources/claude-execution-template.md`. Create a directory at `PROCESS_DOCS/breakdowns/<feature-name>/` with one self-contained document per build agent.
+- **description**: Use the template at `.claude/resources/claude-execution-template.md`. Create a directory at `.claude/artifacts/breakdowns/<feature-name>/` with one self-contained document per build agent.
 
   **Directory structure:**
 
   ```
-  PROCESS_DOCS/breakdowns/<feature-name>/
+  .claude/artifacts/breakdowns/<feature-name>/
   ├── 01-<scope>.md         # Build Agent 1
   ├── 02-<scope>.md         # Build Agent 2
   └── 03-<scope>.md         # Build Agent 3

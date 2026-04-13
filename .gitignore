@@ -1,5 +1,5 @@
 # Scratch / ephemeral
-PROCESS_DOCS/
+.claude/artifacts/
 *.log
 /tmp/
 

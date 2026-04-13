@@ -1,6 +1,6 @@
 ---
 name: bugfest
-description: Debugging protocol. Triage, root-cause, and fix bugs. Creates tickets in PROCESS_DOCS/tickets/ with YAML manifest tracker. Use for known bugs, regressions, or unexpected behavior.
+description: Debugging protocol. Triage, root-cause, and fix bugs. Creates tickets in .claude/artifacts/tickets/ with YAML manifest tracker. Use for known bugs, regressions, or unexpected behavior.
 disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 argument-hint: "[bug description or ticket ID or SEC- ticket path]"
@@ -10,7 +10,7 @@ argument-hint: "[bug description or ticket ID or SEC- ticket path]"
 
 You diagnose and fix bugs through structured triage, root-cause analysis, and verified fixes. Every bug gets a ticket. Every ticket gets tracked in the manifest.
 
-**Input**: Either a bug description (new ticket), a ticket ID (resume existing), or a SEC- ticket path (e.g., `PROCESS_DOCS/sec/tickets/SEC-001-slug.md`). If given a ticket ID, read the ticket and resume from the earliest incomplete section.
+**Input**: Either a bug description (new ticket), a ticket ID (resume existing), or a SEC- ticket path (e.g., `.claude/artifacts/sec/tickets/SEC-001-slug.md`). If given a ticket ID, read the ticket and resume from the earliest incomplete section.
 
 **Tools:** Code navigation (Read, Glob, Grep), execution (Bash for tests only), editing (Edit, Write), dialog (AskUserQuestion), research (WebSearch, Context7).
 
@@ -24,14 +24,14 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
 ### SEC- Ticket Handling
 
-When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
+When input is a SEC- ticket path (matches `.claude/artifacts/sec/tickets/SEC-*`):
 - **Skip Task 1** (triage) and **Task 2** (ticket creation) — `/sec` already performed these.
 - Read the SEC- ticket in place. Security context fields (exploit scenario, threat category, confidence) are part of the ticket.
 - **Start at Task 3** (Establish context) — proceed through normal protocol from there.
 - If escalated, the SEC- ticket path is what gets handed to `/solve` or `/arch`.
 - On resolution, update **both**:
   1. The SEC- ticket's Resolution section
-  2. The status in `PROCESS_DOCS/sec/tickets/manifest.yaml` (set to `resolved`)
+  2. The status in `.claude/artifacts/sec/tickets/manifest.yaml` (set to `resolved`)
 
 ---
 
@@ -74,10 +74,10 @@ When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
 - **description**: Now that the bug is understood, write it down. Diagnosis comes later — this is symptom recording with the clarity gained from triage.
 
   **2.1 Determine ticket ID**
-  Read `PROCESS_DOCS/tickets/manifest.yaml`. If it doesn't exist, create it with an empty `tickets: []` list. Find the highest existing ID and increment by 1.
+  Read `.claude/artifacts/tickets/manifest.yaml`. If it doesn't exist, create it with an empty `tickets: []` list. Find the highest existing ID and increment by 1.
 
   **2.2 Create ticket file**
-  Write `PROCESS_DOCS/tickets/NNN-slug.md` using the template at `.claude/resources/ticket_template.md`. Fill in:
+  Write `.claude/artifacts/tickets/NNN-slug.md` using the template at `.claude/resources/ticket_template.md`. Fill in:
   - **Title**: concise description of the symptom
   - **Reported Symptom**: what the user described, distilled from triage
   - **Reproduction Steps**: from triage conversation
@@ -85,7 +85,7 @@ When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
   - Leave Root Cause, Affected Surface, Fix Plan, and Resolution sections empty
 
   **2.3 Add manifest entry**
-  Append to `PROCESS_DOCS/tickets/manifest.yaml`:
+  Append to `.claude/artifacts/tickets/manifest.yaml`:
   ```yaml
   - id: [N]
     title: "[symptom summary]"
@@ -209,14 +209,14 @@ When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
 
   **If solve-level flaw**:
   1. Expand the ticket's Root Cause section with the design findings — what's wrong with the internal design, what needs to change, and why a code fix won't hold. The ticket becomes the `/solve` brief.
-  2. Update the ticket status to `escalated` in `PROCESS_DOCS/tickets/manifest.yaml`
+  2. Update the ticket status to `escalated` in `.claude/artifacts/tickets/manifest.yaml`
   3. Tell the user: *"Root cause is a design flaw in [subsystem]. Ticket expanded as a `/solve` brief."*
   4. Stop — do not proceed to Task 6.
 
   **If arch-level flaw**:
-  1. Update the arch manifest (`PROCESS_DOCS/arch/[project].manifest.yaml`) — add notes to the affected subsystem describing the finding
+  1. Update the arch manifest (`.claude/artifacts/arch/[project].manifest.yaml`) — add notes to the affected subsystem describing the finding
   2. Expand the ticket's Root Cause section with the architectural finding
-  3. Update the ticket status to `escalated` in `PROCESS_DOCS/tickets/manifest.yaml`
+  3. Update the ticket status to `escalated` in `.claude/artifacts/tickets/manifest.yaml`
   4. Tell the user: *"Root cause is an architecture-level flaw in [subsystem]. Arch manifest updated. This needs `/arch`."*
   5. Stop — do not proceed to Task 6.
 
@@ -271,5 +271,5 @@ When input is a SEC- ticket path (matches `PROCESS_DOCS/sec/tickets/SEC-*`):
   - If the fix revealed something systemic (a pattern of bugs, a fragile module, missing test coverage), add a **Postmortem** note — that's signal for future `/arch` or `/solve` work
 
   **8.2 Update manifest**
-  Set ticket status to `resolved` in `PROCESS_DOCS/tickets/manifest.yaml`.
+  Set ticket status to `resolved` in `.claude/artifacts/tickets/manifest.yaml`.
 
