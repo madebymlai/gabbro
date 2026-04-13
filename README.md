@@ -24,16 +24,6 @@ That's it. Run from any project directory. Works on Linux and macOS (tokf skippe
 | `/tune` | Interactive setup of coding principles and tokf filters for your project |
 | `/denoise` | Post-implementation cleanup |
 
-**Agents** (used by skills, not invoked directly):
-
-| Agent | Role |
-|-------|------|
-| `build` | Sonnet build agent. Implements execution chunks from `/breakdown` |
-| `ar-inquisitor` | Architecture reviewer. Challenges premises and consistency |
-| `ar-enforcer` | Principles reviewer. Validates against `.gabbro/principles.yaml` |
-| `ar-nemesis` | Red team. Failure modes, security, edge cases |
-| `pm-ash` / `pm-ember` | Pattern match validators (native + external model) |
-
 **Tooling the installer sets up**:
 
 - [tokf](https://github.com/mpecan/tokf) - compresses noisy CLI output (cargo test, git push, etc.) so agents see signal, not noise
