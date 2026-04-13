@@ -107,6 +107,8 @@ export const REGISTRY = {
     postInstall: ['tokf hook install --global'],
   },
   'codebase-memory': {
+    binName: 'codebase-memory-mcp',
+    latestVersionRepo: 'DeusData/codebase-memory-mcp',
     install: {
       unix: 'curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash -s -- --ui',
       win32: [
@@ -271,6 +273,20 @@ export async function installFromGithubRelease(name, ghConfig) {
 export async function installBinary(name, server) {
   if (server.githubRelease) {
     return installFromGithubRelease(name, server.githubRelease);
+  }
+  // Version check for script-installed binaries
+  if (server.binName && server.latestVersionRepo) {
+    const installed = getInstalledVersion(server.binName);
+    if (installed) {
+      const releases = await httpsGetJson(
+        `https://api.github.com/repos/${server.latestVersionRepo}/releases/latest`
+      );
+      const latest = releases.tag_name.replace(/^v/, '');
+      if (installed === latest) {
+        console.log(`\n  ${name} ${installed} is up to date`);
+        return true;
+      }
+    }
   }
   const platform = detectPlatform();
   const cmds = server.install?.[platform];
