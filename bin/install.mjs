@@ -582,13 +582,21 @@ async function main() {
     console.log(`\n${name}: done`);
   }
 
-  // API keys
+  // API keys — skip prompt if already in environment
   console.log('\nAPI Keys\n');
   const keys = [];
-  const orKey = await promptApiKey('OpenRouter', 'OPENROUTER_API_KEY');
-  if (orKey) keys.push(orKey);
-  const c7Key = await promptApiKey('Context7', 'CONTEXT7_API_KEY');
-  if (c7Key) keys.push(c7Key);
+  if (process.env.OPENROUTER_API_KEY) {
+    console.log('  OpenRouter: found in environment');
+  } else {
+    const orKey = await promptApiKey('OpenRouter', 'OPENROUTER_API_KEY');
+    if (orKey) keys.push(orKey);
+  }
+  if (process.env.CONTEXT7_API_KEY) {
+    console.log('  Context7: found in environment');
+  } else {
+    const c7Key = await promptApiKey('Context7', 'CONTEXT7_API_KEY');
+    if (c7Key) keys.push(c7Key);
+  }
   if (keys.length) writeEnvFile(keys);
 
   // Skills, agents, resources (overwrite)
