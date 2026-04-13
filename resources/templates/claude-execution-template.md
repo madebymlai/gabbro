@@ -30,7 +30,7 @@ Coverage: Minimum 80%
 
 #### File Locations
 ```
-Style Guides: ${GABBRO_HOME}/resources/frontend_styleguide.md, backend_styleguide.md
+Style Guides: .claude/resources/frontend_styleguide.md, backend_styleguide.md
 Agents:       .claude/agents/AGENT_*.md
 Skills:       .claude/skills/SKILL_*.md
 ```

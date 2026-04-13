@@ -37,8 +37,6 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   - **Parallel**: Docs with "None (parallel)" → will spawn teammates concurrently
   - **Sequential**: If `02-frontend.md` depends on `01-backend.md` → set task dependencies so the frontend task is blocked until backend completes
 
-  **Locate the arch manifest**: Check `.gabbro/artifacts/arch/` for a `.manifest.yaml` file. If found, note the path — you'll update it at phase boundaries (Task 4). If no manifest exists, skip manifest updates (the project may not use `/arch`).
-
   Create one task per agent doc using `TaskCreate`. Set `addBlockedBy` for any sequential dependencies so teammates can self-claim unblocked work.
 
 ### Task 3: Spawn build teammates
@@ -62,7 +60,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 
   **File Ownership**: Ensure no two teammates edit the same file. The `/breakdown` execution docs already group tasks to avoid file conflicts between agents. If you detect overlap, sequence those agents with task dependencies instead of running them in parallel.
 
-### Task 4: Monitor teammates and update manifest
+### Task 4: Monitor teammates
 
 - **activeForm**: Monitoring teammates
 - **description**: While teammates work:
@@ -70,24 +68,6 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   - If a teammate gets stuck, message them with guidance or spawn a replacement
   - If a teammate finishes, verify their task is marked completed and check for newly unblocked tasks
   - Let teammates self-claim unblocked tasks — intervene only when needed
-
-  **Manifest updates** (if arch manifest was found in Task 2):
-  - When a phase **starts**: set the corresponding subsystem status to `building`
-  - When a phase **completes**: set status to `done`
-  - When a phase **fails**: set status to `failed` and add notes describing what went wrong
-  - Update top-level `status` to `building` when first phase starts, `complete` when all phases finish, `failed` on any failure that halts the build
-
-  **Phase 0 — scaffold + feasibility:**
-  The first execution chunk (Phase 0) scaffolds the project and runs feasibility tests against the architecture's assumptions. Phase 0 has two outcomes:
-
-  **If feasibility passes**: Update manifest — set Phase 0 to `done`. Mark Phase 0 task as completed. Proceed to later phases normally.
-
-  **If feasibility fails**: The architecture's constraints or contracts don't hold. Do NOT continue to later phases. Instead:
-  1. Collect the failure details from the teammate (what failed, why, which architectural assumption was invalidated)
-  2. Update manifest — set Phase 0 to `failed` with notes summarizing the failure
-  3. Append detailed findings to the arch spec (`.gabbro/artifacts/arch/[project-name].md`) under a `## Feasibility Failures` section
-  4. Shut down all teammates and clean up the team
-  5. Advise the user: *"Phase 0 feasibility tests failed. Manifest and arch spec updated. Loop back to `/arch` to revisit the architecture before re-planning."*
 
 ### Task 5: Shut down teammates and clean up team
 
@@ -125,8 +105,7 @@ The build orchestration is successful when:
 - **Avoid file conflicts** — two teammates editing the same file = overwrites
 - **Document deviations** — if teammates deviate from the plan, understand why
 - **Clean up** — shut down teammates before cleaning up the team
-- **Phase 0 failures are architecture failures** — update the manifest, append findings to the arch spec, and advise `/arch` — don't push through
-- **Update the manifest** — if an arch manifest exists, keep it current at every phase boundary
+- **If a teammate fails** — collect details, understand why, decide whether to retry or halt
 
 ---
 

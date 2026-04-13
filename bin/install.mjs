@@ -12,16 +12,26 @@ import { homedir, tmpdir } from 'node:os';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
-export function copyDirMerge(src, dest) {
+export function copyDirMerge(src, dest, { overwrite = false } = {}) {
   mkdirSync(dest, { recursive: true });
   for (const entry of readdirSync(src, { withFileTypes: true })) {
     const srcPath = resolve(src, entry.name);
     const destPath = resolve(dest, entry.name);
     if (entry.isDirectory()) {
-      copyDirMerge(srcPath, destPath);
-    } else if (!existsSync(destPath)) {
+      copyDirMerge(srcPath, destPath, { overwrite });
+    } else if (overwrite || !existsSync(destPath)) {
       copyFileSync(srcPath, destPath);
     }
+  }
+}
+
+export function getInstalledVersion(binName) {
+  try {
+    const output = execSync(`${binName} --version`, { encoding: 'utf8', timeout: 5000 }).trim();
+    const match = output.match(/(\d+\.\d+\.\d+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
   }
 }
 
@@ -81,16 +91,6 @@ export function detectTarget() {
   return { ...entry, installDir: binDir };
 }
 
-export function promptScope() {
-  return new Promise((done) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    rl.question('Install globally (g) or project-locally (p)? [g/p]: ', (answer) => {
-      rl.close();
-      done(answer.trim().toLowerCase().startsWith('g') ? 'global' : 'project');
-    });
-  });
-}
-
 export const REGISTRY = {
   'tokf': {
     platforms: ['linux-x86_64', 'darwin-arm64', 'darwin-x86_64'],
@@ -104,10 +104,7 @@ export const REGISTRY = {
       },
       binName: 'tokf',
     },
-    postInstall: {
-      project: ['tokf hook install'],
-      global: ['tokf hook install --global'],
-    },
+    postInstall: ['tokf hook install --global'],
   },
   'codebase-memory': {
     install: {
@@ -196,6 +193,18 @@ export async function installFromGithubRelease(name, ghConfig) {
   if (!release) throw new Error(`No release found matching prefix "${ghConfig.tagPrefix}"`);
 
   const tag = release.tag_name;
+
+  // Version check — skip if already up to date
+  const latestVersion = tag.replace(ghConfig.tagPrefix, '');
+  const bin = typeof ghConfig.binName === 'string'
+    ? ghConfig.binName
+    : (process.platform === 'win32' ? ghConfig.binName.win32 : ghConfig.binName.unix);
+  const installed = getInstalledVersion(bin);
+  if (installed && installed === latestVersion) {
+    console.log(`  ${name} ${installed} is up to date`);
+    return true;
+  }
+
   const ext = process.platform === 'win32' ? '.zip' : '.tar.gz';
   const assetName = ghConfig.assetNameFn
     ? ghConfig.assetNameFn(tag, ghTarget, ext)
@@ -281,16 +290,14 @@ export async function installBinary(name, server) {
   return true;
 }
 
-export function runPostInstall(name, server, scope) {
+export function runPostInstall(name, server) {
   const pi = server.postInstall;
   if (!pi) return;
-  const cmds = Array.isArray(pi) ? pi : pi[scope];
+  const cmds = Array.isArray(pi) ? pi : null;
   if (!cmds?.length) return;
 
-  // Back up settings.json before postInstall (tokf hook install may overwrite PreToolUse)
-  const settingsPath = scope === 'global'
-    ? resolve(homedir(), '.claude', 'settings.json')
-    : resolve('.claude', 'settings.json');
+  // Back up settings.json before postInstall (tokf hook install --global may overwrite PreToolUse)
+  const settingsPath = resolve(homedir(), '.claude', 'settings.json');
   let settingsBefore = null;
   if (existsSync(settingsPath)) {
     settingsBefore = JSON.parse(readFileSync(settingsPath, 'utf8'));
@@ -322,11 +329,9 @@ export function runPostInstall(name, server, scope) {
   console.log(`  Configuration applied.`);
 }
 
-export function mergeMcpJson(name, server, scope) {
+export function mergeMcpJson(name, server) {
   if (!server.mcpEntry) return;
-  const mcpPath = scope === 'global'
-    ? resolve(homedir(), '.claude.json')
-    : resolve('.mcp.json');
+  const mcpPath = resolve(homedir(), '.claude.json');
   let config = {};
   if (existsSync(mcpPath)) {
     config = JSON.parse(readFileSync(mcpPath, 'utf8'));
@@ -378,54 +383,37 @@ export function writeEnvFile(keys) {
   console.log(`  API keys written to ${envPath}`);
 }
 
-export function setGabbroHome() {
-  const { dataDir } = getPlatformPaths();
-  const settingsPath = resolve(homedir(), '.claude', 'settings.json');
-  let settings = {};
-  if (existsSync(settingsPath)) {
-    settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+export function copyPrinciples() {
+  const srcPath = resolve(__dir, '..', 'resources', 'templates', 'principles_template.md');
+  const destPath = resolve('.gabbro', 'principles.md');
+  if (existsSync(destPath)) {
+    console.log(`  .gabbro/principles.md already exists, skipping`);
+    return;
   }
-  settings.env ??= {};
-  settings.env.GABBRO_HOME = dataDir;
-  mkdirSync(resolve(homedir(), '.claude'), { recursive: true });
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-  console.log(`  GABBRO_HOME=${dataDir} set in ~/.claude/settings.json`);
+  mkdirSync(resolve('.gabbro'), { recursive: true });
+  copyFileSync(srcPath, destPath);
+  console.log(`  Copied principles template to .gabbro/principles.md`);
 }
 
 export function installResources() {
-  const { dataDir } = getPlatformPaths();
   const srcDir = resolve(__dir, '..', 'resources');
-  const destDir = resolve(dataDir, 'resources');
-  copyDirMerge(srcDir, destDir);
+  const destDir = resolve('.claude', 'resources');
+  copyDirMerge(srcDir, destDir, { overwrite: true });
   console.log(`  Resources installed to ${destDir}`);
 }
 
-export function installSkills(scope) {
+export function installSkills() {
   const srcDir = resolve(__dir, '..', 'skills');
-  const destDir = scope === 'global'
-    ? resolve(homedir(), '.claude', 'skills')
-    : resolve('.claude', 'skills');
-  copyDirMerge(srcDir, destDir);
+  const destDir = resolve('.claude', 'skills');
+  copyDirMerge(srcDir, destDir, { overwrite: true });
   console.log(`  Skills installed to ${destDir}`);
 }
 
-export function installAgents(scope) {
+export function installAgents() {
   const srcDir = resolve(__dir, '..', 'agents');
-  const destDir = scope === 'global'
-    ? resolve(homedir(), '.claude', 'agents')
-    : resolve('.claude', 'agents');
-  copyDirMerge(srcDir, destDir);
+  const destDir = resolve('.claude', 'agents');
+  copyDirMerge(srcDir, destDir, { overwrite: true });
   console.log(`  Agents installed to ${destDir}`);
-}
-
-export function createClaudeMd(scope) {
-  if (scope !== 'project') return;
-  const claudeMdPath = resolve('.claude', 'CLAUDE.md');
-  if (!existsSync(claudeMdPath)) {
-    mkdirSync(resolve('.claude'), { recursive: true });
-    writeFileSync(claudeMdPath, '');
-    console.log(`  Created .claude/CLAUDE.md`);
-  }
 }
 
 const EXTENSIONS_BLOCK = `extensions:
@@ -576,12 +564,10 @@ export function installCli() {
 
 async function main() {
   console.log('gabbro installer\n');
-  const scope = await promptScope();
-  console.log(`\nScope: ${scope}\n`);
 
+  // Binaries (version-checked)
   for (const [name, server] of Object.entries(REGISTRY)) {
-    if (name === 'context7') continue; // npx-only, no binary to install
-
+    if (name === 'context7') continue; // npx-only, no binary
     if (server.platforms) {
       const target = detectTarget();
       if (!target || !server.platforms.includes(target.key)) {
@@ -589,15 +575,14 @@ async function main() {
         continue;
       }
     }
-
     const installed = await installBinary(name, server);
     if (!installed) continue;
-
-    runPostInstall(name, server, scope);
-    mergeMcpJson(name, server, scope);
+    runPostInstall(name, server);
+    mergeMcpJson(name, server);
     console.log(`\n${name}: done`);
   }
 
+  // API keys
   console.log('\nAPI Keys\n');
   const keys = [];
   const orKey = await promptApiKey('OpenRouter', 'OPENROUTER_API_KEY');
@@ -606,20 +591,24 @@ async function main() {
   if (c7Key) keys.push(c7Key);
   if (keys.length) writeEnvFile(keys);
 
-  console.log('\nSetting up gabbro...');
-  setGabbroHome();
+  // Skills, agents, resources (overwrite)
+  console.log('\nInstalling skills, agents, resources...');
+  installSkills();
+  installAgents();
   installResources();
-  installSkills(scope);
-  installAgents(scope);
-  createClaudeMd(scope);
 
+  // Goose recipes + CLI
   console.log('\nWriting recipes and CLI...');
   writeRecipes();
   installCli();
 
-  mergeMcpJson('context7', REGISTRY['context7'], scope);
+  // MCP config
+  mergeMcpJson('context7', REGISTRY['context7']);
 
-  console.log('\nAll done.');
+  // Project setup
+  copyPrinciples();
+
+  console.log('\nDone.');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

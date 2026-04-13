@@ -114,7 +114,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
     - scope: Component-level
       check: Per-file docs in docs_*/ directories
     - scope: Patterns
-      check: Style guides in ${GABBRO_HOME}/resources/
+      check: Style guides in .claude/resources/
   ```
 
 ### Task 4: Validate technical approach

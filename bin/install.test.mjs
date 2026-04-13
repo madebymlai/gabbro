@@ -21,11 +21,11 @@ import {
   installCli,
   REGISTRY,
   copyDirMerge,
-  setGabbroHome,
   installResources,
   installSkills,
   installAgents,
-  createClaudeMd,
+  getInstalledVersion,
+  copyPrinciples,
 } from './install.mjs';
 
 // ── detectPlatform ────────────────────────────────────────────────────────────
@@ -55,38 +55,38 @@ test('test_detectPlatform_win32', () => {
 
 test('test_mergeMcpJson_creates_new', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const originalCwd = process.cwd();
-  process.chdir(dir);
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
   try {
     const entry = { command: 'codebase-memory-mcp', args: ['--mcp'] };
-    mergeMcpJson('codebase-memory', { mcpEntry: entry }, 'project');
+    mergeMcpJson('codebase-memory', { mcpEntry: entry });
 
-    const raw = readFileSync(join(dir, '.mcp.json'), 'utf8');
+    const raw = readFileSync(join(dir, '.claude.json'), 'utf8');
     const config = JSON.parse(raw);
     assert.ok(config.mcpServers, 'mcpServers key must exist');
     assert.deepEqual(config.mcpServers['codebase-memory'], entry);
   } finally {
-    process.chdir(originalCwd);
+    process.env.HOME = origHome;
     rmSync(dir, { recursive: true });
   }
 });
 
 test('test_mergeMcpJson_merges_existing', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const originalCwd = process.cwd();
-  process.chdir(dir);
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
   try {
     const existing = { mcpServers: { 'other-server': { command: 'foo', args: [] } } };
-    writeFileSync(join(dir, '.mcp.json'), JSON.stringify(existing, null, 2) + '\n');
+    writeFileSync(join(dir, '.claude.json'), JSON.stringify(existing, null, 2) + '\n');
 
     const entry = { command: 'codebase-memory-mcp', args: ['--mcp'] };
-    mergeMcpJson('codebase-memory', { mcpEntry: entry }, 'project');
+    mergeMcpJson('codebase-memory', { mcpEntry: entry });
 
-    const config = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf8'));
+    const config = JSON.parse(readFileSync(join(dir, '.claude.json'), 'utf8'));
     assert.deepEqual(config.mcpServers['other-server'], existing.mcpServers['other-server'], 'existing entry must be untouched');
     assert.deepEqual(config.mcpServers['codebase-memory'], entry, 'new entry must be present');
   } finally {
-    process.chdir(originalCwd);
+    process.env.HOME = origHome;
     rmSync(dir, { recursive: true });
   }
 });
@@ -155,40 +155,27 @@ test('test_detectTarget_linux_arm64_returns_null', () => {
 
 test('test_mergeMcpJson_skips_no_mcpEntry', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const originalCwd = process.cwd();
-  process.chdir(dir);
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
   try {
-    // tokf has no mcpEntry — should not create .mcp.json
-    mergeMcpJson('tokf', {}, 'project');
-    assert.ok(!existsSync(join(dir, '.mcp.json')), '.mcp.json should not be created');
+    // tokf has no mcpEntry — should not create ~/.claude.json
+    mergeMcpJson('tokf', {});
+    assert.ok(!existsSync(join(dir, '.claude.json')), '~/.claude.json should not be created');
   } finally {
-    process.chdir(originalCwd);
+    process.env.HOME = origHome;
     rmSync(dir, { recursive: true });
   }
 });
 
 // ── runPostInstall scope ──────────────────────────────────────────────────────
 
-test('test_runPostInstall_array_ignores_scope', () => {
-  // Array postInstall should work regardless of scope — it's scope-agnostic
+test('test_runPostInstall_array_runs_commands', () => {
   const server = { postInstall: ['echo array-test'] };
-  assert.doesNotThrow(() => runPostInstall('test', server, 'global'));
-  assert.doesNotThrow(() => runPostInstall('test', server, 'project'));
-});
-
-test('test_runPostInstall_object_picks_scope', () => {
-  const server = {
-    postInstall: {
-      project: ['echo project-mode'],
-      global: ['echo global-mode'],
-    },
-  };
-  assert.doesNotThrow(() => runPostInstall('test', server, 'project'));
-  assert.doesNotThrow(() => runPostInstall('test', server, 'global'));
+  assert.doesNotThrow(() => runPostInstall('test', server));
 });
 
 test('test_runPostInstall_no_postInstall_noop', () => {
-  assert.doesNotThrow(() => runPostInstall('test', {}, 'project'));
+  assert.doesNotThrow(() => runPostInstall('test', {}));
 });
 
 // ── Task 1: getPlatformPaths ──────────────────────────────────────────────────
@@ -432,7 +419,7 @@ test('installCli creates symlink on Unix', () => {
 
 // ── Task 5: mergeMcpJson global path fix, context7, trace_path ────────────────
 
-test('mergeMcpJson global scope writes to ~/.claude.json preserving existing keys', () => {
+test('mergeMcpJson writes to ~/.claude.json preserving existing keys', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
   const origHome = process.env.HOME;
   process.env.HOME = dir;
@@ -440,7 +427,7 @@ test('mergeMcpJson global scope writes to ~/.claude.json preserving existing key
     writeFileSync(join(dir, '.claude.json'), JSON.stringify({ numStartups: 5 }, null, 2) + '\n');
 
     const entry = { command: 'test', args: [] };
-    mergeMcpJson('test', { mcpEntry: entry }, 'global');
+    mergeMcpJson('test', { mcpEntry: entry });
 
     const claudeJsonPath = join(dir, '.claude.json');
     assert.ok(existsSync(claudeJsonPath), '~/.claude.json must exist');
@@ -449,24 +436,6 @@ test('mergeMcpJson global scope writes to ~/.claude.json preserving existing key
     assert.deepEqual(config.mcpServers['test'], entry, 'new entry must be added');
   } finally {
     process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('mergeMcpJson project scope writes to .mcp.json in cwd', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const originalCwd = process.cwd();
-  process.chdir(dir);
-  try {
-    const entry = { command: 'npx', args: ['-y', '@upstash/context7-mcp'] };
-    mergeMcpJson('context7', { mcpEntry: entry }, 'project');
-
-    const mcpPath = join(dir, '.mcp.json');
-    assert.ok(existsSync(mcpPath), '.mcp.json must be created');
-    const config = JSON.parse(readFileSync(mcpPath, 'utf8'));
-    assert.deepEqual(config.mcpServers['context7'], entry);
-  } finally {
-    process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
   }
 });
@@ -502,6 +471,72 @@ test('writeRecipes copies run.mjs with extractReview implementation', () => {
   } finally {
     Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
     process.env.HOME = origHome;
+    rmSync(dir, { recursive: true });
+  }
+});
+
+// ── getInstalledVersion ───────────────────────────────────────────────────────
+
+test('getInstalledVersion extracts semver from real binary (tokf)', () => {
+  // Real binary on this system: tokf
+  const version = getInstalledVersion('tokf');
+  if (version !== null) {
+    assert.match(version, /^\d+\.\d+\.\d+$/, 'must return semver string');
+  }
+  // null is also valid when binary is absent — just don't throw
+});
+
+test('getInstalledVersion returns null on nonexistent binary', () => {
+  const version = getInstalledVersion('__nonexistent_binary_xyz__');
+  assert.equal(version, null, 'must return null for missing binary');
+});
+
+// ── copyDirMerge overwrite option ─────────────────────────────────────────────
+
+test('copyDirMerge with overwrite replaces existing files', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const src = join(dir, 'src');
+  const dest = join(dir, 'dest');
+  mkdirSync(src, { recursive: true });
+  mkdirSync(dest, { recursive: true });
+  writeFileSync(join(src, 'a.txt'), 'new');
+  writeFileSync(join(dest, 'a.txt'), 'old');
+  try {
+    copyDirMerge(src, dest, { overwrite: true });
+    assert.equal(readFileSync(join(dest, 'a.txt'), 'utf8'), 'new', 'overwrite must replace file');
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
+});
+
+test('copyDirMerge without overwrite skips existing files', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const src = join(dir, 'src');
+  const dest = join(dir, 'dest');
+  mkdirSync(src, { recursive: true });
+  mkdirSync(dest, { recursive: true });
+  writeFileSync(join(src, 'a.txt'), 'new');
+  writeFileSync(join(dest, 'a.txt'), 'old');
+  try {
+    copyDirMerge(src, dest);
+    assert.equal(readFileSync(join(dest, 'a.txt'), 'utf8'), 'old', 'without overwrite must skip existing');
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
+});
+
+test('copyDirMerge with overwrite propagates to subdirs', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const src = join(dir, 'src');
+  const dest = join(dir, 'dest');
+  mkdirSync(join(src, 'sub'), { recursive: true });
+  mkdirSync(join(dest, 'sub'), { recursive: true });
+  writeFileSync(join(src, 'sub', 'a.txt'), 'new');
+  writeFileSync(join(dest, 'sub', 'a.txt'), 'old');
+  try {
+    copyDirMerge(src, dest, { overwrite: true });
+    assert.equal(readFileSync(join(dest, 'sub', 'a.txt'), 'utf8'), 'new', 'overwrite must propagate to subdirs');
+  } finally {
     rmSync(dir, { recursive: true });
   }
 });
@@ -556,203 +591,95 @@ test('copyDirMerge creates nested dirs', () => {
   }
 });
 
-// ── Task 2 (Agent 2): setGabbroHome ──────────────────────────────────────────
+// ── Task 3 (Agent 2, new): no-scope install functions ────────────────────────
 
-test('setGabbroHome creates settings with GABBRO_HOME', () => {
+test('installSkills copies to .claude/skills with overwrite', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    setGabbroHome();
-    const settingsPath = join(dir, '.claude', 'settings.json');
-    assert.ok(existsSync(settingsPath), 'settings.json must exist');
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
-    const { dataDir } = getPlatformPaths();
-    assert.equal(settings.env.GABBRO_HOME, dataDir, 'GABBRO_HOME must equal dataDir');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('setGabbroHome preserves existing settings keys', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    mkdirSync(join(dir, '.claude'), { recursive: true });
-    const existing = { permissions: { defaultMode: 'auto' }, env: { OTHER: 'val' } };
-    writeFileSync(join(dir, '.claude', 'settings.json'), JSON.stringify(existing, null, 2) + '\n');
-    setGabbroHome();
-    const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'));
-    assert.deepEqual(settings.permissions, { defaultMode: 'auto' }, 'permissions must be preserved');
-    assert.equal(settings.env.OTHER, 'val', 'OTHER env var must be preserved');
-    assert.ok('GABBRO_HOME' in settings.env, 'GABBRO_HOME must be set');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('setGabbroHome overwrites stale GABBRO_HOME', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    mkdirSync(join(dir, '.claude'), { recursive: true });
-    writeFileSync(join(dir, '.claude', 'settings.json'), JSON.stringify({ env: { GABBRO_HOME: '/old/path' } }, null, 2) + '\n');
-    setGabbroHome();
-    const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'));
-    const { dataDir } = getPlatformPaths();
-    assert.equal(settings.env.GABBRO_HOME, dataDir, 'stale GABBRO_HOME must be overwritten with current dataDir');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-// ── Task 3 (Agent 2): installResources, installSkills, installAgents, createClaudeMd ──
-
-test('installSkills project scope copies to .claude/skills', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
   const originalCwd = process.cwd();
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
   process.chdir(dir);
   try {
-    installSkills('project');
+    installSkills();
     const skillsDir = join(dir, '.claude', 'skills');
     assert.ok(existsSync(skillsDir), '.claude/skills must exist');
   } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
     process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
   }
 });
 
-test('installSkills global scope copies to ~/.claude/skills', () => {
+test('installAgents copies to .claude/agents with overwrite', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    installSkills('global');
-    const skillsDir = join(dir, '.claude', 'skills');
-    assert.ok(existsSync(skillsDir), '~/.claude/skills must exist');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('installAgents copies agent md files', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
   const originalCwd = process.cwd();
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
   process.chdir(dir);
   try {
-    installAgents('project');
+    installAgents();
     const agentsDir = join(dir, '.claude', 'agents');
     assert.ok(existsSync(agentsDir), '.claude/agents must exist');
     assert.ok(existsSync(join(agentsDir, 'ar-nemesis.md')), 'ar-nemesis.md must be installed');
   } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
     process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
   }
 });
 
-test('installResources copies to GABBRO_HOME/resources', () => {
+test('installResources copies to .claude/resources with overwrite', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
+  const originalCwd = process.cwd();
+  process.chdir(dir);
   try {
     installResources();
-    const { dataDir } = getPlatformPaths();
-    assert.ok(existsSync(join(dataDir, 'resources', 'principles.md')), 'principles.md must be installed');
+    const resourcesDir = join(dir, '.claude', 'resources');
+    assert.ok(existsSync(resourcesDir), '.claude/resources must exist');
   } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
+    process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
   }
 });
 
-test('installResources preserves existing resources', () => {
+test('mergeMcpJson always writes to ~/.claude.json', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
   const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
   process.env.HOME = dir;
   try {
-    const { dataDir } = getPlatformPaths();
-    mkdirSync(join(dataDir, 'resources'), { recursive: true });
-    writeFileSync(join(dataDir, 'resources', 'principles.md'), 'custom content');
-    installResources();
-    assert.equal(readFileSync(join(dataDir, 'resources', 'principles.md'), 'utf8'), 'custom content', 'existing file must be preserved');
+    const entry = { command: 'codebase-memory-mcp', args: ['--mcp'] };
+    mergeMcpJson('codebase-memory', { mcpEntry: entry });
+    const claudeJsonPath = join(dir, '.claude.json');
+    assert.ok(existsSync(claudeJsonPath), '~/.claude.json must exist');
+    const config = JSON.parse(readFileSync(claudeJsonPath, 'utf8'));
+    assert.deepEqual(config.mcpServers['codebase-memory'], entry);
   } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
     process.env.HOME = origHome;
     rmSync(dir, { recursive: true });
   }
 });
 
-test('createClaudeMd creates empty file if absent', () => {
+// ── copyPrinciples ────────────────────────────────────────────────────────────
+
+test('copyPrinciples creates .gabbro/principles.md from template', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
   const originalCwd = process.cwd();
   process.chdir(dir);
   try {
-    mkdirSync(join(dir, '.claude'), { recursive: true });
-    createClaudeMd('project');
-    assert.ok(existsSync(join(dir, '.claude', 'CLAUDE.md')), '.claude/CLAUDE.md must be created');
-    assert.equal(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf8'), '', 'file must be empty');
+    copyPrinciples();
+    const dest = join(dir, '.gabbro', 'principles.md');
+    assert.ok(existsSync(dest), '.gabbro/principles.md must be created');
+    const content = readFileSync(dest, 'utf8');
+    assert.ok(content.length > 0, 'file must not be empty');
   } finally {
     process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
   }
 });
 
-test('createClaudeMd skips if exists', () => {
+test('copyPrinciples skips if already exists', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
   const originalCwd = process.cwd();
   process.chdir(dir);
   try {
-    mkdirSync(join(dir, '.claude'), { recursive: true });
-    writeFileSync(join(dir, '.claude', 'CLAUDE.md'), 'content');
-    createClaudeMd('project');
-    assert.equal(readFileSync(join(dir, '.claude', 'CLAUDE.md'), 'utf8'), 'content', 'existing content must be preserved');
-  } finally {
-    process.chdir(originalCwd);
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('createClaudeMd does nothing for global scope', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const originalCwd = process.cwd();
-  process.chdir(dir);
-  try {
-    createClaudeMd('global');
-    assert.ok(!existsSync(join(dir, '.claude', 'CLAUDE.md')), 'CLAUDE.md must not be created for global scope');
+    mkdirSync(join(dir, '.gabbro'), { recursive: true });
+    writeFileSync(join(dir, '.gabbro', 'principles.md'), 'custom');
+    copyPrinciples();
+    assert.equal(readFileSync(join(dir, '.gabbro', 'principles.md'), 'utf8'), 'custom', 'existing file must not be overwritten');
   } finally {
     process.chdir(originalCwd);
     rmSync(dir, { recursive: true });
