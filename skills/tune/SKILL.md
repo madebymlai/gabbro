@@ -43,12 +43,22 @@ ELSE:
 
 ## Phase 3: tokf Filters (if selected)
 
-1. Read `.claude/resources/prompts/guides/tokf-guide.md`
-2. Follow the guide's "Presenting to the user" instructions
-3. Follow the guide's "Probe Instructions" for command discovery
-4. Before writing, check `.tokf/filters/` for existing filters and report them
-5. Write each accepted filter to `.tokf/filters/[tool]/[command].toml`
-6. Write `.tokf/rewrites.toml` if any rewrites were accepted
+### Step 1: Discover real usage
+Run `tokf discover --json` via Bash to find commands that ran without filters in past sessions.
+
+- If discover finds unfiltered commands with significant token waste: propose filters for the top results, one at a time via AskUserQuestion
+- If discover finds nothing (new project, no session history): fall back to codebase exploration (Step 2)
+
+### Step 2: Codebase exploration (fallback)
+Only if discover found nothing. Read `.claude/resources/prompts/guides/tokf-guide.md` and follow its probe instructions to discover commands from package.json, Makefile, justfile, etc.
+
+### Step 3: Write filters
+For each accepted filter, read `.claude/skills/tokf-filter/SKILL.md` for the full TOML reference (processing order, fields, templates). Use that knowledge to write proper filters, not just Level 1.
+
+- Check `.tokf/filters/` for existing filters and skip duplicates
+- Write each accepted filter to `.tokf/filters/[tool]/[command].toml`
+- Write `.tokf/rewrites.toml` if any rewrites were accepted
+- Verify each filter with `tokf verify` after writing
 
 ## Phase 4: Summary
 

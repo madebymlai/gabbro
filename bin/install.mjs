@@ -104,7 +104,7 @@ export const REGISTRY = {
       },
       binName: 'tokf',
     },
-    postInstall: ['tokf hook install --global'],
+    postInstall: ['tokf hook install --global', 'tokf skill install'],
   },
   'codebase-memory': {
     binName: 'codebase-memory-mcp',
