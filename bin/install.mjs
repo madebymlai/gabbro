@@ -154,6 +154,10 @@ export async function installFromGithubRelease(name, ghConfig) {
     execSync(`curl -fsSL -o "${tarball}.sha256" "${shaAsset.browser_download_url}"`, {
       stdio: 'inherit', shell: '/bin/bash',
     });
+    // .sha256 may be bare hash or `hash  filename` — normalize to shasum -c format
+    const shaRaw = readFileSync(`${tarball}.sha256`, 'utf8').trim();
+    const shaLine = shaRaw.includes('  ') ? shaRaw : `${shaRaw}  ${assetName}`;
+    writeFileSync(`${tarball}.sha256`, shaLine + '\n');
     execSync(`cd "${tmpDir}" && shasum -a 256 -c "${tarball}.sha256"`, {
       stdio: 'inherit', shell: '/bin/bash',
     });
