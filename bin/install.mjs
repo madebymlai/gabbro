@@ -354,6 +354,11 @@ export function mergeMcpJson(name, server) {
   }
   config.mcpServers ??= {};
   config.mcpServers[name] = server.mcpEntry;
+  // Remove duplicate entry that codebase-memory's own installer creates
+  if (name === 'codebase-memory' && config.mcpServers['codebase-memory-mcp']) {
+    delete config.mcpServers['codebase-memory-mcp'];
+    console.log(`  Removed duplicate "codebase-memory-mcp" entry`);
+  }
   writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`  ${mcpPath}: added "${name}"`);
 }
