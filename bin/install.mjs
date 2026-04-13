@@ -120,27 +120,6 @@ export const REGISTRY = {
       'codebase-memory-mcp config set auto_index true',
       'codebase-memory-mcp config set auto_index_limit 50000',
     ],
-    mcpEntry: {
-      command: 'codebase-memory-mcp',
-      args: ['--mcp'],
-    },
-    externalMcpEntry: {
-      command: 'codebase-memory-mcp',
-      args: ['--mcp'],
-      toolAllowlist: [
-        'index_repository',
-        'index_status',
-        'list_projects',
-        'search_graph',
-        'search_code',
-        'get_code_snippet',
-        'trace_path',
-        'detect_changes',
-        'query_graph',
-        'get_graph_schema',
-        'get_architecture',
-      ],
-    },
   },
   'goose': {
     githubRelease: {
@@ -354,11 +333,6 @@ export function mergeMcpJson(name, server) {
   }
   config.mcpServers ??= {};
   config.mcpServers[name] = server.mcpEntry;
-  // Remove duplicate entry that codebase-memory's own installer creates
-  if (name === 'codebase-memory' && config.mcpServers['codebase-memory-mcp']) {
-    delete config.mcpServers['codebase-memory-mcp'];
-    console.log(`  Removed duplicate "codebase-memory-mcp" entry`);
-  }
   writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`  ${mcpPath}: added "${name}"`);
 }

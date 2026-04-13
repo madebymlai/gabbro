@@ -440,11 +440,6 @@ test('mergeMcpJson writes to ~/.claude.json preserving existing keys', () => {
   }
 });
 
-test('codebase-memory externalMcpEntry uses trace_path not trace_call_path', () => {
-  const toolAllowlist = REGISTRY['codebase-memory'].externalMcpEntry.toolAllowlist;
-  assert.ok(toolAllowlist.includes('trace_path'), 'must include trace_path');
-  assert.ok(!toolAllowlist.includes('trace_call_path'), 'must not include trace_call_path');
-});
 
 test('context7 registry entry has mcpEntry with npx command', () => {
   const context7 = REGISTRY['context7'];
