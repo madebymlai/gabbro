@@ -26,7 +26,7 @@ That's it. Run from any project directory. Works on Linux and macOS (tokf skippe
 
 **Tooling the installer sets up**:
 
-- [tokf](https://github.com/mpecan/tokf) - compresses noisy CLI output (cargo test, git push, etc.) so agents see signal, not noise
+- [tokf](https://github.com/mpecan/tokf) - compresses noisy CLI output (cargo test, git push, etc.) so agents see signal, not noise (Linux/MacOS only)
 - [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) - code knowledge graph for structural queries
 - [Context7](https://github.com/upstash/context7) - live library documentation lookup
 - [Goose](https://github.com/block/goose) - external model agent runner for adversarial reviews
