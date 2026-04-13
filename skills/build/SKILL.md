@@ -1,7 +1,6 @@
 ---
 name: build
 description: Implementation workflow. Orchestrates an agent team to implement execution breakdowns. Use after /breakdown and /pmatch validation.
-disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Task, Bash, Write, Edit
 argument-hint: "[path/to/execution-dir/]"
 agents:

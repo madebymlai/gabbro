@@ -1,7 +1,6 @@
 ---
 name: breakdown
 description: Execution breakdown workflow. Transforms approved designs into detailed task breakdowns for build agents. Use after /ar approval.
-disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Write
 argument-hint: "[path/to/design-doc.md]"
 ---
