@@ -1,0 +1,27 @@
+# brief_template.yaml — Template for project briefs
+# Used by /arm to create briefs in .gabbro/artifacts/briefs/
+
+title: "[Title]"
+problem: "[What problem does this solve?]"
+
+requirements:
+  - user_story: "As a [role], I want [feature], so that [benefit]"
+    acceptance_criteria:
+      - "WHEN [event] THEN [system] SHALL [response]"
+      - "IF [precondition] THEN [system] SHALL [response]"
+
+  - user_story: "As a [role], I want [feature], so that [benefit]"
+    acceptance_criteria:
+      - "WHEN [event] THEN [system] SHALL [response]"
+
+constraints:
+  - "[Constraint 1]"
+  - "[Constraint 2]"
+
+non_goals:
+  - "[Explicitly out of scope]"
+
+non_functional:
+  performance: "[Performance requirements]"
+  security: "[Security requirements]"
+  reliability: "[Reliability requirements]"

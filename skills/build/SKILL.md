@@ -112,5 +112,3 @@ The build orchestration is successful when:
 ## Reference
 
 - [Agent Teams Docs](https://code.claude.com/docs/en/agent-teams)
-- [Frontend Style Guide](../../resources/frontend_styleguide.md)
-- [Backend Style Guide](../../resources/backend_styleguide.md)

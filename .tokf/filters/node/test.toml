@@ -1,0 +1,25 @@
+command = "node --test"
+description = "Compact Node.js built-in test runner output"
+strip_ansi = true
+
+skip = [
+  "^\\s*$",
+  "^# Subtest:",
+  "^\\s+---$",
+  "^\\s+\\.\\.\\.$",
+  "^\\s+duration_ms:",
+  "^\\s+type:",
+  "^\\s+operator:",
+  "^\\s+expected:",
+  "^\\s+actual:",
+  "^\\s+stack:",
+  "^\\s+at ",
+  "^TAP version",
+  "^\\s+ok \\d+",
+]
+
+[on_success]
+extract = { pattern = "# pass (\\d+)", output = "ok ✓ {1} passed" }
+
+[on_failure]
+tail = 20

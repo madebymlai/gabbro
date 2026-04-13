@@ -116,8 +116,7 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
 
   **3.1 Map the affected area**
   - Identify which module(s) the symptom touches
-  - Read the module README and ARC doc for architecture context
-  - Read per-file docs for the specific files involved
+  - Read relevant design docs in `.gabbro/artifacts/` for architecture context
   - Read relevant tests — what's already covered?
 
   **3.2 Understand the contract**

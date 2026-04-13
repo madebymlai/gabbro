@@ -1,0 +1,338 @@
+# principles_catalog.yaml — Full catalog of available coding principles
+# Used by the /tune skill to present options to the user.
+# Each entry uses the same schema as principles_template.yaml.
+
+principles:
+  # ── SOLID ──────────────────────────────────────────────────────────────────
+  - name: Single Responsibility (SRP)
+    category: SOLID
+    rule: One module, one reason to change.
+    ask:
+      - Can I describe this module's purpose without using "and"?
+      - What is the single reason this module would need to change?
+      - Does this file mix unrelated concerns (e.g. parsing + persistence + formatting)?
+      - If I rename this module to match what it does, does the name fit in under five words?
+      - Are there two groups of functions here that never call each other?
+
+  - name: Open/Closed (OCP)
+    category: SOLID
+    rule: Extend behavior without modifying existing code.
+    ask:
+      - Can I add this behavior without changing existing code?
+      - Am I editing a switch/if-else chain to add this?
+      - Is there a growing `if type == ...` ladder that a polymorphic dispatch would eliminate?
+      - Does adding a new variant require edits in more than one file?
+      - Am I modifying stable code instead of plugging into an extension point?
+
+  - name: Liskov Substitution (LSP)
+    category: SOLID
+    rule: Implementations are interchangeable.
+    ask:
+      - Would swapping this implementation break callers?
+      - Does this implementation honor all contracts of the interface?
+      - Does this override throw `NotImplementedError` or silently no-op?
+      - Does this subclass strengthen preconditions or weaken postconditions?
+      - Do callers have to check the concrete type to know what they can do?
+
+  - name: Interface Segregation (ISP)
+    category: SOLID
+    rule: Small, focused interfaces.
+    ask:
+      - Does this class use every method it's forced to implement?
+      - Would a new implementation need to stub out methods?
+      - Is this interface a grab-bag that no single consumer uses fully?
+      - Could this one big interface be split into two smaller ones that don't overlap?
+      - Are callers depending on methods they don't actually call?
+
+  - name: Dependency Inversion (DIP)
+    category: SOLID
+    rule: Depend on abstractions, never concrete implementations.
+    ask:
+      - Am I importing a concrete class or an interface?
+      - Can I swap this dependency without changing this file?
+      - Is high-level policy importing low-level detail modules directly?
+      - Is this dependency constructed inside the class instead of injected?
+      - Would testing this require mocking a concrete library instead of an interface?
+
+  # ── KISS & DRY ─────────────────────────────────────────────────────────────
+  - name: KISS
+    category: KISS & DRY
+    rule: Simplest solution that works. Boring code is good code.
+    ask:
+      - Is there a simpler way to do this?
+      - Would a junior developer understand this immediately?
+      - Am I adding abstraction for a second use case that doesn't exist yet?
+      - Is this clever one-liner replaceable with three clear lines?
+      - Am I using a framework feature where a plain function would do?
+      - Does this solve a problem I actually have, or one I might have?
+
+  - name: DRY
+    category: KISS & DRY
+    rule: If you write the same logic twice, extract it.
+    ask:
+      - Have I written this pattern elsewhere in the codebase?
+      - Would changing this require updating multiple places?
+      - Are these two blocks duplicates, or do they only look similar (coincidental duplication)?
+      - Is the shared concept real, or am I forcing an abstraction over unrelated code?
+      - If the rule behind this duplication changes, will all copies need to change together?
+
+  # ── No Defensive Garbage ───────────────────────────────────────────────────
+  - name: No Defensive Garbage
+    category: No Defensive Garbage
+    rule: Let bugs surface, don't hide them. Trust contracts.
+    ask:
+      - Am I adding a fallback that hides bugs instead of surfacing them?
+      - Is this try/catch swallowing errors silently?
+      - Am I writing null checks everywhere instead of fixing the source?
+      - Does this "safe" default make debugging impossible?
+      - Is this a dead branch that never executes but adds cognitive load?
+      - Am I validating input that has already been validated upstream?
+      - Is this check protecting against a case that can't actually happen?
+      - Would removing this guard make a real bug louder and easier to find?
+
+  # ── Composition & Types ────────────────────────────────────────────────────
+  - name: Composition over Inheritance
+    category: Composition & Types
+    rule: Combine behaviors, don't extend them. No hierarchies deeper than 2.
+    ask:
+      - Am I inheriting just to reuse code?
+      - Is this class hierarchy deeper than 2 levels?
+      - Could this be a field (has-a) instead of a parent (is-a)?
+      - Does the subclass override more than it extends?
+      - Am I using inheritance to share implementation rather than to model a real subtype relationship?
+
+  - name: Make Invalid States Unrepresentable
+    category: Composition & Types
+    rule: Use the type system. Enums over flags. If it compiles, it's valid.
+    ask:
+      - Can this be represented as one discriminated union instead of multiple booleans?
+      - Would adding a new state require changing conditionals in many places?
+      - Are there combinations of these fields that should never coexist but currently can?
+      - Am I using a string where an enum would prevent typos at compile time?
+      - Does the type allow `null` in a place where `null` is never valid?
+      - Can I push this runtime check into the type system?
+
+  - name: Tell, Don't Ask
+    category: Composition & Types
+    rule: Put behavior where the data lives.
+    ask:
+      - Am I inspecting data to decide behavior instead of delegating it?
+      - Am I reaching through an object to touch its internals?
+      - Would this logic be shorter if it lived on the object being inspected?
+      - Is the caller making decisions that only the owner of the data should make?
+
+  # ── Error Handling ─────────────────────────────────────────────────────────
+  - name: Fail Fast
+    category: Error Handling
+    rule: Detect errors at the earliest possible point and stop immediately.
+    ask:
+      - Am I deferring an error check to later when I could catch it now?
+      - Does this function validate its preconditions before doing any work?
+      - Am I returning a sentinel value that will cause a confusing failure downstream?
+      - Would failing immediately here make the root cause more obvious?
+
+  - name: No Silent Error Swallowing
+    category: Error Handling
+    rule: Every error must be logged, re-thrown, or explicitly handled — never ignored.
+    ask:
+      - Does this catch block do nothing with the error?
+      - Is there a comment that says "ignore" next to an empty catch?
+      - Am I catching a broad exception type and swallowing all variants?
+      - Would a caller ever know this operation failed?
+
+  - name: Explicit Error Types
+    category: Error Handling
+    rule: Use typed errors, not generic exceptions or string messages.
+    ask:
+      - Is this throwing `Error("something went wrong")` where a typed error would be clearer?
+      - Can callers distinguish error cases without parsing the message string?
+      - Is there a union type or enum that would make error variants exhaustively checkable?
+      - Would a new error case added in the future be caught by the type checker?
+
+  # ── Testing ────────────────────────────────────────────────────────────────
+  - name: Test Behavior Not Implementation
+    category: Testing
+    rule: Tests verify observable outcomes, not internal wiring.
+    ask:
+      - Does this test break when I refactor internals without changing behavior?
+      - Am I asserting on the number of times a private method was called?
+      - Would this test still be valid if I rewrote the implementation from scratch?
+      - Does the test name describe what the system does, not how it does it?
+
+  - name: No Mocks for Integration Boundaries
+    category: Testing
+    rule: Test real integrations against real systems; mock only at process boundaries.
+    ask:
+      - Am I mocking a database when I could use an in-process test database?
+      - Would a mock here let a broken integration silently pass tests?
+      - Is this mock so detailed it effectively re-implements the dependency?
+      - Did production diverge from the mock's behavior and no test caught it?
+
+  - name: Fixture-Driven Test Data
+    category: Testing
+    rule: Test data lives in fixtures, not scattered inline across test bodies.
+    ask:
+      - Are test inputs copy-pasted across multiple test cases?
+      - Would changing a data shape require editing every test individually?
+      - Is there a shared fixture file where this data should live?
+      - Do multiple tests use slightly different versions of the same base object?
+
+  # ── Security ───────────────────────────────────────────────────────────────
+  - name: Parameterized Queries Only
+    category: Security
+    rule: Never concatenate user input into SQL or query strings.
+    ask:
+      - Is any part of this query built by string concatenation?
+      - Could a user-supplied value change the structure of this query?
+      - Is there a parameterized API available that I'm not using?
+      - Would an injection attack here affect other users' data?
+
+  - name: No Secrets in Code
+    category: Security
+    rule: Credentials, tokens, and keys must come from environment or secrets manager — never hardcoded.
+    ask:
+      - Does this file contain any API keys, passwords, or tokens?
+      - Would this commit expose credentials if the repo were made public?
+      - Is there a secrets manager or env var this value should come from instead?
+      - Does the CI pipeline inject this value safely at runtime?
+
+  - name: Validate External Input
+    category: Security
+    rule: All data crossing a trust boundary must be validated before use.
+    ask:
+      - Is this value coming from a user, API, or file that could be adversarial?
+      - Am I using this external value before checking its shape or bounds?
+      - Would an unexpected type or size here cause a crash or data corruption?
+      - Is there a schema or validator that should gate this input?
+
+  # ── Performance ────────────────────────────────────────────────────────────
+  - name: No N+1 Queries
+    category: Performance
+    rule: Fetch related data in bulk, not one record at a time in a loop.
+    ask:
+      - Is there a database query inside a loop that iterates over query results?
+      - Would this code issue O(n) queries for n records?
+      - Is there a JOIN or batch fetch that would replace this loop?
+      - Does the ORM have an eager-loading option that should be used here?
+
+  - name: Bound Resource Consumption
+    category: Performance
+    rule: All loops, queues, and allocations have explicit upper bounds.
+    ask:
+      - Can this loop or recursion run indefinitely on adversarial input?
+      - Is there a max page size or limit on this query?
+      - Would processing a very large input here exhaust memory or time out?
+      - Is there a circuit breaker or timeout on this external call?
+
+  - name: No Circular Dependencies
+    category: Performance
+    rule: Module dependency graph must be a DAG — no cycles.
+    ask:
+      - Does module A import module B which imports module A?
+      - Would a dependency graph tool show a cycle here?
+      - Is this circular dependency hiding a missing abstraction both modules should depend on?
+      - Would splitting one of these modules break the cycle cleanly?
+
+  # ── Rust ───────────────────────────────────────────────────────────────────
+  - name: No unwrap in Library Code
+    category: Rust
+    rule: Library functions propagate errors with `?` — never panic with `.unwrap()` or `.expect()`.
+    ask:
+      - Does this library function call `.unwrap()` on a `Result` or `Option`?
+      - Would a caller be unable to handle this panic gracefully?
+      - Is there a `?` operator or `map_err` that should replace this `.unwrap()`?
+      - Is `.expect()` used with a message that should be a returned error instead?
+
+  - name: Prefer Iterators Over Index Loops
+    category: Rust
+    rule: Use iterator chains instead of index-based loops for safety and clarity.
+    ask:
+      - Is this a `for i in 0..n` loop that could be a `.iter().map()` chain?
+      - Could an off-by-one error here cause a panic?
+      - Would `.enumerate()`, `.zip()`, or `.filter_map()` express this more clearly?
+      - Is there a `.collect()` that accumulates results more idiomatically?
+
+  # ── TypeScript/JavaScript ──────────────────────────────────────────────────
+  - name: Strict Null Checks
+    category: TypeScript/JavaScript
+    rule: Enable `strictNullChecks`; every nullable access must be guarded.
+    ask:
+      - Is `strictNullChecks` enabled in tsconfig.json?
+      - Am I accessing a property on a value that could be `null` or `undefined`?
+      - Is there a non-null assertion (`!`) hiding a potential runtime error?
+      - Would optional chaining (`?.`) or a null guard make this safer?
+
+  - name: No Any Types
+    category: TypeScript/JavaScript
+    rule: Never use `any` — use `unknown`, generics, or a proper type instead.
+    ask:
+      - Does this function parameter or return type use `any`?
+      - Is there a cast `as any` that bypasses the type checker?
+      - Would `unknown` with a type guard express the intent more safely?
+      - Is this `any` hiding a missing type definition that should be added?
+
+  # ── Python ─────────────────────────────────────────────────────────────────
+  - name: Type Hints on Public APIs
+    category: Python
+    rule: All public functions and methods have parameter and return type annotations.
+    ask:
+      - Does this public function have type annotations on all parameters?
+      - Is the return type annotated?
+      - Would mypy or pyright flag this as missing annotations?
+      - Are Optional or Union types used where None is a valid value?
+
+  - name: No Bare Except
+    category: Python
+    rule: Never use `except:` without an exception type — always catch a specific exception.
+    ask:
+      - Does this except clause catch all exceptions including `SystemExit` and `KeyboardInterrupt`?
+      - Is there a specific exception type that should be named here?
+      - Would catching `Exception` be more appropriate than bare `except:`?
+      - Does this broad catch hide bugs by silencing unexpected errors?
+
+  # ── Go ─────────────────────────────────────────────────────────────────────
+  - name: Check Every Error
+    category: Go
+    rule: Every returned error must be checked — never assigned to `_`.
+    ask:
+      - Is there a function call where the error return is discarded with `_`?
+      - Would ignoring this error allow the program to silently continue in a broken state?
+      - Is there a `//nolint` or explicit justification for why this error can be ignored?
+      - Would wrapping this error with `fmt.Errorf` add useful context for debugging?
+
+  - name: Context Propagation
+    category: Go
+    rule: Pass `context.Context` as the first argument through all call chains that do I/O.
+    ask:
+      - Does this function do network, disk, or database I/O without accepting a context?
+      - Is a `context.Background()` created inside a function that should inherit a parent context?
+      - Would cancelling the parent context propagate cancellation through this call chain?
+      - Is context passed as a struct field instead of as a function argument?
+
+  # ── Java/Kotlin ────────────────────────────────────────────────────────────
+  - name: Prefer Sealed Types
+    category: Java/Kotlin
+    rule: Use sealed classes/interfaces for closed type hierarchies — exhaustive when-matching at compile time.
+    ask:
+      - Is this class hierarchy open when the set of subtypes is actually fixed and known?
+      - Would a sealed interface let the compiler enforce exhaustive handling of all variants?
+      - Is there a when/switch on type that would break silently if a new subtype were added?
+      - Could an enum or sealed class replace this open inheritance?
+
+  - name: No Checked Exceptions Across Boundaries
+    category: Java/Kotlin
+    rule: Don't leak checked exceptions across module or API boundaries — wrap in domain-specific unchecked exceptions.
+    ask:
+      - Does this public API force callers to catch implementation-specific checked exceptions?
+      - Would changing the underlying library require callers to update their catch blocks?
+      - Is there a domain exception type that should wrap this low-level exception?
+      - Are callers catching Exception broadly because the checked exception list is too long?
+
+  - name: Use Optional Instead of Null
+    category: Java/Kotlin
+    rule: Return `Optional<T>` for values that may be absent — never return null from public methods.
+    ask:
+      - Does this method return null to indicate "not found" or "no value"?
+      - Would callers need to null-check the return value to avoid NPE?
+      - Is there an `Optional.ofNullable()` or `?.let {}` that would make absence explicit?
+      - Are there null-returning methods that force defensive null checks throughout the codebase?

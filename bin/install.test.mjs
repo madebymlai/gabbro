@@ -655,14 +655,14 @@ test('mergeMcpJson always writes to ~/.claude.json', () => {
 
 // ── copyPrinciples ────────────────────────────────────────────────────────────
 
-test('copyPrinciples creates .gabbro/principles.md from template', () => {
+test('copyPrinciples creates .gabbro/principles.yaml from template', () => {
   const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
   const originalCwd = process.cwd();
   process.chdir(dir);
   try {
     copyPrinciples();
-    const dest = join(dir, '.gabbro', 'principles.md');
-    assert.ok(existsSync(dest), '.gabbro/principles.md must be created');
+    const dest = join(dir, '.gabbro', 'principles.yaml');
+    assert.ok(existsSync(dest), '.gabbro/principles.yaml must be created');
     const content = readFileSync(dest, 'utf8');
     assert.ok(content.length > 0, 'file must not be empty');
   } finally {
@@ -677,9 +677,9 @@ test('copyPrinciples skips if already exists', () => {
   process.chdir(dir);
   try {
     mkdirSync(join(dir, '.gabbro'), { recursive: true });
-    writeFileSync(join(dir, '.gabbro', 'principles.md'), 'custom');
+    writeFileSync(join(dir, '.gabbro', 'principles.yaml'), 'custom');
     copyPrinciples();
-    assert.equal(readFileSync(join(dir, '.gabbro', 'principles.md'), 'utf8'), 'custom', 'existing file must not be overwritten');
+    assert.equal(readFileSync(join(dir, '.gabbro', 'principles.yaml'), 'utf8'), 'custom', 'existing file must not be overwritten');
   } finally {
     process.chdir(originalCwd);
     rmSync(dir, { recursive: true });

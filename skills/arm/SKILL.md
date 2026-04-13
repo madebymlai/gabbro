@@ -75,7 +75,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 5: Synthesize brief
 
 - **activeForm**: Synthesizing brief
-- **description**: Write the brief to `.gabbro/artifacts/briefs/NN-[slug].md`. Check existing files to determine the next number (e.g., `07-user-auth.md`). Use the template at `.claude/resources/templates/brief_template.md`. Omit empty sections. Keep it tight.
+- **description**: Write the brief to `.gabbro/artifacts/briefs/NN-[slug].yaml`. Check existing files to determine the next number (e.g., `07-user-auth.yaml`). Use the template at `.claude/resources/templates/brief_template.yaml`. Omit empty sections. Keep it tight.
 
 ### Task 6: Self-review the brief
 
@@ -103,7 +103,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 8: Hand off
 
 - **activeForm**: Handing off
-- **description**: Tell the user to run: `/solve .gabbro/artifacts/briefs/NN-slug.md`
+- **description**: Tell the user to run: `/solve .gabbro/artifacts/briefs/NN-slug.yaml`
 
 ---
 

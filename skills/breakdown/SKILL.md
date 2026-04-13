@@ -38,7 +38,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 3: Write execution documents
 
 - **activeForm**: Writing execution documents
-- **description**: Use the template at `.claude/resources/templates/claude-execution-template.md`. Create a directory at `.gabbro/artifacts/breakdowns/<feature-name>/` with one self-contained document per build agent.
+- **description**: Use the template at `.claude/resources/templates/claude_execution_template.md`. Create a directory at `.gabbro/artifacts/breakdowns/<feature-name>/` with one self-contained document per build agent.
 
   **Directory structure:**
 

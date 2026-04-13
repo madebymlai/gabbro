@@ -54,7 +54,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 
 - **activeForm**: Checking internal consistency
 - **description**: Validate against existing architecture:
-  - Does it follow patterns in ARCHITECTURE_*.md?
+  - Does it follow existing patterns in the codebase?
   - Does it respect module boundaries?
   - Does it conflict with existing functionality?
   - Are integration points compatible?

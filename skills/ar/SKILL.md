@@ -49,7 +49,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   | Teammate   | `subagent_type` | Scope                                                         |
   |------------|-----------------|---------------------------------------------------------------|
   | Inquisitor | ar-inquisitor   | Architecture, premises, consistency, completeness             |
-  | Enforcer   | ar-enforcer     | Project coding principles (`.gabbro/principles.md`) |
+  | Enforcer   | ar-enforcer     | Project coding principles (`.gabbro/principles.yaml`) |
   | Nemesis    | ar-nemesis      | Red team — failure modes, scale, security, ops                |
 
   **Spawn prompt:** "Review the target at [PATH]. When done, mark your task as completed and message the lead with your critique."

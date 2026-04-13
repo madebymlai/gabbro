@@ -32,33 +32,11 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 1: Clarify requirements
 
 - **activeForm**: Clarifying requirements
-- **description**: Start with dialog. The input is a brief or raw prompt — either way, extract what you need through conversation before analyzing.
+- **description**: Read the input — a brief from `/arm` (YAML), a raw prompt, or an upstream document. Extract the requirements, constraints, and non-goals.
 
-  **Probe for:**
+  If the input is a brief: read it, confirm you understand it, and ask about anything ambiguous or missing. Don't re-probe what `/arm` already covered.
 
-  ```yaml
-  requirement_probes:
-    - category: User story
-      extract: Who is the user, what are they doing, why does it matter?
-      ask: "Who uses this and what's their workflow?"
-    - category: Behavior
-      extract: What should this do, concretely?
-      ask: "Walk me through the happy path."
-    - category: Edge cases
-      extract: What can go wrong, what's unusual?
-      ask: "What happens when X fails or Y is missing?"
-    - category: Constraints
-      extract: Performance, privacy, cost, compatibility
-      ask: "Any hard limits? What's the error budget?"
-    - category: Non-goals
-      extract: What's explicitly out of scope?
-      ask: "What should this NOT do?"
-    - category: Dependencies
-      extract: What does this touch, integrate with, or break?
-      ask: "What existing code does this affect?"
-  ```
-
-  Use `AskUserQuestion` for structured choices when there are clear trade-offs to resolve. Use conversational follow-ups for open-ended exploration. Drive the dialog — don't wait passively.
+  If the input is a raw prompt (no brief): ask enough to understand the problem, constraints, and scope before proceeding. Use `AskUserQuestion` for structured choices when there are clear trade-offs.
 
 ### Task 2: Analyze the problem (first principles)
 
@@ -103,19 +81,13 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 3: Review project context
 
 - **activeForm**: Reviewing project context
-- **description**: Navigate docs based on task scope:
+- **description**: Use codebase-memory-mcp to explore the codebase and understand the area the solution will touch:
+  1. `mcp__codebase-memory-mcp__get_architecture` — project overview, languages, structure
+  2. `mcp__codebase-memory-mcp__search_graph` — find modules/functions related to the problem
+  3. `mcp__codebase-memory-mcp__search_code` — find existing patterns, similar implementations
+  4. `mcp__codebase-memory-mcp__trace_path` — trace call chains if understanding data flow
 
-  ```yaml
-  context_checks:
-    - scope: System-level
-      check: .gabbro/artifacts/ for existing designs and architecture
-    - scope: Module-level
-      check: Module READMEs or docs_*/ARC_*.md within modules
-    - scope: Component-level
-      check: Per-file docs in docs_*/ directories
-    - scope: Patterns
-      check: Style guides in .claude/resources/
-  ```
+  Use the context to inform design decisions — don't dump a summary on the user.
 
 ### Task 4: Validate technical approach
 
@@ -204,12 +176,6 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
     ```
   - Integration points
   - Specific code examples
-
-  **Phase 0 designs** (scaffold + feasibility): Success criteria and findings sections MUST use conditional branching, not unconditional spec amendment. The build agent needs to know what to do in each case:
-  - **If feasibility passes**: Mark Phase 0 done, proceed to Phase 1. Do NOT amend the arch spec — the architecture held.
-  - **If feasibility fails**: Append failure findings to the arch spec (what failed, why, which assumption was invalidated). Halt — loop back to `/arch` to revisit the architecture.
-
-  Never write "amend arch spec accordingly" or "write findings back to spec" as unconditional instructions. Findings only go back to the spec when something breaks.
 
 ---
 

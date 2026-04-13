@@ -1,0 +1,11 @@
+# principles_template.yaml — Template for project coding principles
+# Copy to .gabbro/principles.yaml and customize for your project.
+# The Enforcer validates code and designs against these principles.
+
+principles:
+  - name: Principle Name
+    category: Category Name
+    rule: One-line rule statement.
+    ask:
+      - Concrete question to check conformance
+      - Another question

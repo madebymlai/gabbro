@@ -384,15 +384,15 @@ export function writeEnvFile(keys) {
 }
 
 export function copyPrinciples() {
-  const srcPath = resolve(__dir, '..', 'resources', 'templates', 'principles_template.md');
-  const destPath = resolve('.gabbro', 'principles.md');
+  const srcPath = resolve(__dir, '..', 'resources', 'templates', 'principles_template.yaml');
+  const destPath = resolve('.gabbro', 'principles.yaml');
   if (existsSync(destPath)) {
-    console.log(`  .gabbro/principles.md already exists, skipping`);
+    console.log(`  .gabbro/principles.yaml already exists, skipping`);
     return;
   }
   mkdirSync(resolve('.gabbro'), { recursive: true });
   copyFileSync(srcPath, destPath);
-  console.log(`  Copied principles template to .gabbro/principles.md`);
+  console.log(`  Copied principles template to .gabbro/principles.yaml`);
 }
 
 export function installResources() {

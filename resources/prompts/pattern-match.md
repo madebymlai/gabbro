@@ -14,10 +14,8 @@ Use developer tools when the target is a directory or codebase — search for im
 Use `tree` to explore directory structure. Use `shell` with `grep` to find specific patterns.
 
 Key entry points:
-- `CLAUDE.md` — architecture overview and hard constraints
-- `site/README.md` — site module overview
-- `cli/README.md` — CLI module overview
-- `site/docs_site/`, `cli/docs_cli/` — module architecture and per-file docs
+- `.gabbro/artifacts/` — designs, briefs, solutions
+- `.gabbro/principles.yaml` — coding principles
 
 ## Process
 

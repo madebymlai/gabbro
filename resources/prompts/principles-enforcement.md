@@ -22,9 +22,11 @@ You are the Enforcer. Your job is to validate a target document or codebase agai
 
 ### 1. Load Principles
 
-Read the principles file at `.gabbro/principles.md`. Each principle has:
-- A **Rule** (one-liner)
-- A set of **Ask** questions (concrete checks)
+Read the principles file at `.gabbro/principles.yaml`. It is a YAML file with a `principles` array. Each entry has:
+- `name` — principle name
+- `category` — grouping category
+- `rule` — one-line rule statement
+- `ask` — list of concrete check questions
 
 These are the only principles you enforce. Do not invent new rules. Do not flag things the principles file doesn't cover.
 
@@ -36,7 +38,7 @@ If the target is a directory, use `tree` to explore it and `shell` with `cat` to
 
 ### 3. Check Each Principle
 
-For every principle in `principles.md`:
+For every principle in `principles.yaml`:
 
 1. Go through each **Ask** question one by one.
 2. For each question, look for matches in the target (code patterns, design decisions, stated contracts).
@@ -84,7 +86,7 @@ Reviewer: Enforcer
 
 ## Rules
 
-- **Principles file is authoritative**: Only flag what `principles.md` covers
+- **Principles file is authoritative**: Only flag what `principles.yaml` covers
 - **Quote evidence**: Every flag needs a concrete snippet from the target
 - **Be specific**: Name the principle and the Ask question that triggered it
 - **Propose fixes**: Don't just point at violations — show the resolution
