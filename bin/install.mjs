@@ -4,11 +4,26 @@
 
 import https from 'node:https';
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, readdirSync, copyFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { resolve, dirname, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir, tmpdir } from 'node:os';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+
+export function copyDirMerge(src, dest) {
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    const srcPath = resolve(src, entry.name);
+    const destPath = resolve(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirMerge(srcPath, destPath);
+    } else if (!existsSync(destPath)) {
+      copyFileSync(srcPath, destPath);
+    }
+  }
+}
 
 export function httpsGetJson(url, redirects = 0) {
   if (redirects > 5) return Promise.reject(new Error(`Too many redirects fetching ${url}`));
@@ -363,6 +378,56 @@ export function writeEnvFile(keys) {
   console.log(`  API keys written to ${envPath}`);
 }
 
+export function setGabbroHome() {
+  const { dataDir } = getPlatformPaths();
+  const settingsPath = resolve(homedir(), '.claude', 'settings.json');
+  let settings = {};
+  if (existsSync(settingsPath)) {
+    settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+  }
+  settings.env ??= {};
+  settings.env.GABBRO_HOME = dataDir;
+  mkdirSync(resolve(homedir(), '.claude'), { recursive: true });
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+  console.log(`  GABBRO_HOME=${dataDir} set in ~/.claude/settings.json`);
+}
+
+export function installResources() {
+  const { dataDir } = getPlatformPaths();
+  const srcDir = resolve(__dir, '..', 'resources');
+  const destDir = resolve(dataDir, 'resources');
+  copyDirMerge(srcDir, destDir);
+  console.log(`  Resources installed to ${destDir}`);
+}
+
+export function installSkills(scope) {
+  const srcDir = resolve(__dir, '..', 'skills');
+  const destDir = scope === 'global'
+    ? resolve(homedir(), '.claude', 'skills')
+    : resolve('.claude', 'skills');
+  copyDirMerge(srcDir, destDir);
+  console.log(`  Skills installed to ${destDir}`);
+}
+
+export function installAgents(scope) {
+  const srcDir = resolve(__dir, '..', 'agents');
+  const destDir = scope === 'global'
+    ? resolve(homedir(), '.claude', 'agents')
+    : resolve('.claude', 'agents');
+  copyDirMerge(srcDir, destDir);
+  console.log(`  Agents installed to ${destDir}`);
+}
+
+export function createClaudeMd(scope) {
+  if (scope !== 'project') return;
+  const claudeMdPath = resolve('.claude', 'CLAUDE.md');
+  if (!existsSync(claudeMdPath)) {
+    mkdirSync(resolve('.claude'), { recursive: true });
+    writeFileSync(claudeMdPath, '');
+    console.log(`  Created .claude/CLAUDE.md`);
+  }
+}
+
 const EXTENSIONS_BLOCK = `extensions:
   - type: builtin
     name: developer
@@ -435,8 +500,7 @@ export function writeRecipes() {
   const extAgents = resolve(dataDir, 'ext-agents');
   mkdirSync(extAgents, { recursive: true });
 
-  const __dir = dirname(fileURLToPath(import.meta.url));
-  const promptsDir = resolve(__dir, '..', '.claude', 'resources', 'prompts');
+  const promptsDir = resolve(__dir, '..', 'resources', 'prompts');
 
   const readPrompt = (file) =>
     readFileSync(resolve(promptsDir, file), 'utf8')
@@ -541,6 +605,13 @@ async function main() {
   const c7Key = await promptApiKey('Context7', 'CONTEXT7_API_KEY');
   if (c7Key) keys.push(c7Key);
   if (keys.length) writeEnvFile(keys);
+
+  console.log('\nSetting up gabbro...');
+  setGabbroHome();
+  installResources();
+  installSkills(scope);
+  installAgents(scope);
+  createClaudeMd(scope);
 
   console.log('\nWriting recipes and CLI...');
   writeRecipes();

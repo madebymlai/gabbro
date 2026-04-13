@@ -26,7 +26,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 ### Task 1: Create team
 
 - **activeForm**: Creating team
-- **description**: The user provides a path to an execution directory (e.g., `.claude/artifacts/breakdowns/feature-name/`). This directory contains one self-contained doc per build agent: `01-<scope>.md`, `02-<scope>.md`, etc.
+- **description**: The user provides a path to an execution directory (e.g., `.gabbro/artifacts/breakdowns/feature-name/`). This directory contains one self-contained doc per build agent: `01-<scope>.md`, `02-<scope>.md`, etc.
 
   List the agent docs to determine how many teammates to spawn. Use `TeamCreate` with a descriptive name (e.g., `build-[feature]`).
 
@@ -37,7 +37,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   - **Parallel**: Docs with "None (parallel)" → will spawn teammates concurrently
   - **Sequential**: If `02-frontend.md` depends on `01-backend.md` → set task dependencies so the frontend task is blocked until backend completes
 
-  **Locate the arch manifest**: Check `.claude/artifacts/arch/` for a `.manifest.yaml` file. If found, note the path — you'll update it at phase boundaries (Task 4). If no manifest exists, skip manifest updates (the project may not use `/arch`).
+  **Locate the arch manifest**: Check `.gabbro/artifacts/arch/` for a `.manifest.yaml` file. If found, note the path — you'll update it at phase boundaries (Task 4). If no manifest exists, skip manifest updates (the project may not use `/arch`).
 
   Create one task per agent doc using `TaskCreate`. Set `addBlockedBy` for any sequential dependencies so teammates can self-claim unblocked work.
 
@@ -85,7 +85,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   **If feasibility fails**: The architecture's constraints or contracts don't hold. Do NOT continue to later phases. Instead:
   1. Collect the failure details from the teammate (what failed, why, which architectural assumption was invalidated)
   2. Update manifest — set Phase 0 to `failed` with notes summarizing the failure
-  3. Append detailed findings to the arch spec (`.claude/artifacts/arch/[project-name].md`) under a `## Feasibility Failures` section
+  3. Append detailed findings to the arch spec (`.gabbro/artifacts/arch/[project-name].md`) under a `## Feasibility Failures` section
   4. Shut down all teammates and clean up the team
   5. Advise the user: *"Phase 0 feasibility tests failed. Manifest and arch spec updated. Loop back to `/arch` to revisit the architecture before re-planning."*
 

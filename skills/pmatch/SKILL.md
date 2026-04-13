@@ -17,7 +17,7 @@ agents:
 ## Your Role
 You orchestrate pattern matching agents to validate alignment between a source-of-truth and a target. Lightweight quick alternative to `/ar` for checking if plans match designs, or implementations match plans.
 
-Ash and Ember are a sibling pair — both follow the shared playbook at `.claude/resources/prompts/pattern-match.md`. Ash runs natively in Claude Code; Ember proxies to an external model (Kimi) via .gabbro.
+Ash and Ember are a sibling pair — both follow the shared playbook at `${GABBRO_HOME}/resources/prompts/pattern-match.md`. Ash runs natively in Claude Code; Ember proxies to an external model (Kimi) via .gabbro.
 
 ---
 

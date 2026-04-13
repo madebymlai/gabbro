@@ -15,7 +15,7 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 ### Phase 1: Load instructions
 
 - **activeForm**: Loading instructions
-- **description**: Read `.claude/resources/prompts/pattern-match.md`. This is your playbook — it defines claim types, the validation process, the extras sweep, and the output format. Follow it literally.
+- **description**: Read `${GABBRO_HOME}/resources/prompts/pattern-match.md`. This is your playbook — it defines claim types, the validation process, the extras sweep, and the output format. Follow it literally.
 
 ### Phase 2: Run pattern match
 

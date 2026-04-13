@@ -14,7 +14,7 @@ Before writing any code, load these in order. Do not skip them:
 
 1. **The execution doc** from your task — primary guide with tasks and acceptance criteria.
 2. **`test-driven-development` skill** — invoke it. This is your **bible**. Follow the TDD cycle for every feature and bugfix: failing test first, then implementation, then refactor. Every run.
-3. **`.claude/resources/principles.md`** — the project's coding principles. Every change must honor them.
+3. **`.gabbro/principles.md`** — the project's coding principles. Every change must honor them.
 
 ## Task Tracking
 

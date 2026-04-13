@@ -1,5 +1,10 @@
 # Scratch / ephemeral
-.claude/artifacts/
+.gabbro/artifacts/
+
+# Installed by gabbro installer (source of truth is at project root)
+.claude/skills/
+.claude/agents/
+.claude/resources/
 *.log
 /tmp/
 

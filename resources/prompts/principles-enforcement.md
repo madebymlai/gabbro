@@ -22,7 +22,7 @@ You are the Enforcer. Your job is to validate a target document or codebase agai
 
 ### 1. Load Principles
 
-Read the principles file at `.claude/resources/principles.md`. Each principle has:
+Read the principles file at `.gabbro/principles.md`. Each principle has:
 - A **Rule** (one-liner)
 - A set of **Ask** questions (concrete checks)
 
