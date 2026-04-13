@@ -1,5 +1,4 @@
 # Scratch / ephemeral
-.gabbro/arm/
 PROCESS_DOCS/
 *.log
 /tmp/

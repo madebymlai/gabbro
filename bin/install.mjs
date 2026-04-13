@@ -4,11 +4,11 @@
 
 import https from 'node:https';
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { createInterface } from 'node:readline';
-import { resolve } from 'node:path';
+import { resolve, dirname, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 
 export function httpsGetJson(url, redirects = 0) {
   if (redirects > 5) return Promise.reject(new Error(`Too many redirects fetching ${url}`));
@@ -32,29 +32,51 @@ export function httpsGetJson(url, redirects = 0) {
   });
 }
 
+export function getPlatformPaths() {
+  const isWin = process.platform === 'win32';
+  if (isWin) {
+    return {
+      dataDir: win32.join(process.env.LOCALAPPDATA, 'gabbro'),
+      configDir: win32.join(process.env.APPDATA, 'gabbro'),
+      binDir: win32.join(process.env.LOCALAPPDATA, 'gabbro', 'bin'),
+    };
+  }
+  return {
+    dataDir: resolve(homedir(), '.local', 'share', 'gabbro'),
+    configDir: resolve(homedir(), '.config', 'gabbro'),
+    binDir: resolve(homedir(), '.local', 'bin'),
+  };
+}
+
 const TARGET_MAP = {
-  linux:  { x64: { key: 'linux-x86_64',  installDir: resolve(homedir(), '.local', 'bin') } },
+  linux:  { x64: { key: 'linux-x86_64' } },
   darwin: {
-    arm64: { key: 'darwin-arm64',  installDir: resolve(homedir(), '.local', 'bin') },
-    x64:   { key: 'darwin-x86_64', installDir: resolve(homedir(), '.local', 'bin') },
+    arm64: { key: 'darwin-arm64' },
+    x64:   { key: 'darwin-x86_64' },
+  },
+  win32: {
+    x64: { key: 'win32-x64' },
   },
 };
 
 export function detectTarget() {
-  return TARGET_MAP[process.platform]?.[process.arch] ?? null;
+  const entry = TARGET_MAP[process.platform]?.[process.arch];
+  if (!entry) return null;
+  const { binDir } = getPlatformPaths();
+  return { ...entry, installDir: binDir };
 }
 
 export function promptScope() {
-  return new Promise((resolve) => {
+  return new Promise((done) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     rl.question('Install globally (g) or project-locally (p)? [g/p]: ', (answer) => {
       rl.close();
-      resolve(answer.trim().toLowerCase().startsWith('g') ? 'global' : 'project');
+      done(answer.trim().toLowerCase().startsWith('g') ? 'global' : 'project');
     });
   });
 }
 
-const REGISTRY = {
+export const REGISTRY = {
   'tokf': {
     platforms: ['linux-x86_64', 'darwin-arm64', 'darwin-x86_64'],
     githubRelease: {
@@ -98,12 +120,36 @@ const REGISTRY = {
         'search_graph',
         'search_code',
         'get_code_snippet',
-        'trace_call_path',
+        'trace_path',
         'detect_changes',
         'query_graph',
         'get_graph_schema',
         'get_architecture',
       ],
+    },
+  },
+  'goose': {
+    githubRelease: {
+      repo: 'block/goose',
+      tagPrefix: 'v',
+      targets: {
+        'linux-x86_64': 'x86_64-unknown-linux-gnu',
+        'linux-aarch64': 'aarch64-unknown-linux-gnu',
+        'darwin-arm64': 'aarch64-apple-darwin',
+        'darwin-x86_64': 'x86_64-apple-darwin',
+        'win32-x64': 'x86_64-pc-windows-msvc',
+      },
+      binName: process.platform === 'win32' ? 'goose.exe' : 'goose',
+      assetNameFn: (tag, target, ext) => `goose-${target}${ext}`,
+    },
+  },
+  'context7': {
+    mcpEntry: {
+      command: 'npx',
+      args: ['-y', '@upstash/context7-mcp'],
+      env: {
+        CONTEXT7_API_KEY: '${CONTEXT7_API_KEY}',
+      },
     },
   },
 };
@@ -135,14 +181,17 @@ export async function installFromGithubRelease(name, ghConfig) {
   if (!release) throw new Error(`No release found matching prefix "${ghConfig.tagPrefix}"`);
 
   const tag = release.tag_name;
-  const assetName = `${tag}-${ghTarget}.tar.gz`;
+  const ext = process.platform === 'win32' ? '.zip' : '.tar.gz';
+  const assetName = ghConfig.assetNameFn
+    ? ghConfig.assetNameFn(tag, ghTarget, ext)
+    : `${tag}-${ghTarget}${ext}`;
   const asset = release.assets.find(a => a.name === assetName);
   if (!asset) throw new Error(`Asset "${assetName}" not found in release ${tag}`);
 
-  // 2. Download tarball + checksum to temp dir
+  // 2. Download to temp dir
   const installDir = target.installDir;
-  const tmpDir = execSync('mktemp -d', { encoding: 'utf8' }).trim();
-  const tarball = `${tmpDir}/${assetName}`;
+  const tmpDir = mkdtempSync(resolve(tmpdir(), 'gabbro-install-'));
+  const tarball = resolve(tmpDir, assetName);
 
   execSync(`curl -fsSL -o "${tarball}" "${asset.browser_download_url}"`, {
     stdio: 'inherit', shell: '/bin/bash',
@@ -154,7 +203,6 @@ export async function installFromGithubRelease(name, ghConfig) {
     execSync(`curl -fsSL -o "${tarball}.sha256" "${shaAsset.browser_download_url}"`, {
       stdio: 'inherit', shell: '/bin/bash',
     });
-    // .sha256 may be bare hash or `hash  filename` — normalize to shasum -c format
     const shaRaw = readFileSync(`${tarball}.sha256`, 'utf8').trim();
     const shaLine = shaRaw.includes('  ') ? shaRaw : `${shaRaw}  ${assetName}`;
     writeFileSync(`${tarball}.sha256`, shaLine + '\n');
@@ -167,15 +215,27 @@ export async function installFromGithubRelease(name, ghConfig) {
   }
 
   // 4. Extract and install
-  execSync(`mkdir -p "${installDir}"`, { stdio: 'inherit' });
-  execSync(`tar xzf "${tarball}" -C "${installDir}" ${ghConfig.binName}`, {
-    stdio: 'inherit', shell: '/bin/bash',
-  });
-  execSync(`chmod +x "${installDir}/${ghConfig.binName}"`);
-  execSync(`rm -rf "${tmpDir}"`);
+  mkdirSync(installDir, { recursive: true });
+  if (assetName.endsWith('.zip')) {
+    execSync(
+      `powershell -Command "Expand-Archive -Path '${tarball}' -DestinationPath '${tmpDir}' -Force"`,
+      { stdio: 'inherit', shell: 'powershell.exe' },
+    );
+    const binSrc = resolve(tmpDir, ghConfig.binName);
+    execSync(`copy "${binSrc}" "${resolve(installDir, ghConfig.binName)}"`, {
+      stdio: 'inherit', shell: 'cmd.exe',
+    });
+  } else {
+    execSync(`tar xzf "${tarball}" -C "${installDir}" "./${ghConfig.binName}" 2>/dev/null || tar xzf "${tarball}" -C "${installDir}" ${ghConfig.binName}`, {
+      stdio: 'inherit', shell: '/bin/bash',
+    });
+    execSync(`chmod +x "${installDir}/${ghConfig.binName}"`);
+  }
+  rmSync(tmpDir, { recursive: true });
 
   // 5. Warn if install dir not on PATH
-  const pathDirs = (process.env.PATH || '').split(':');
+  const pathSep = process.platform === 'win32' ? ';' : ':';
+  const pathDirs = (process.env.PATH || '').split(pathSep);
   if (!pathDirs.includes(installDir)) {
     console.log(`  Warning: ${installDir} is not on your PATH. Add it to your shell profile.`);
   }
@@ -250,7 +310,7 @@ export function runPostInstall(name, server, scope) {
 export function mergeMcpJson(name, server, scope) {
   if (!server.mcpEntry) return;
   const mcpPath = scope === 'global'
-    ? resolve(homedir(), '.claude', '.mcp.json')
+    ? resolve(homedir(), '.claude.json')
     : resolve('.mcp.json');
   let config = {};
   if (existsSync(mcpPath)) {
@@ -262,17 +322,206 @@ export function mergeMcpJson(name, server, scope) {
   console.log(`  ${mcpPath}: added "${name}"`);
 }
 
-export function mergeExternalAgents(name, server) {
-  const eaPath = resolve('.gabbro/external-agents.json');
-  if (!existsSync(eaPath)) {
-    console.log(`  .gabbro/external-agents.json not found, skipping.`);
-    return;
+export function promptApiKey(name, envVar) {
+  return new Promise((done) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(`${name} API key (or press Enter to skip): `, (answer) => {
+      rl.close();
+      const val = answer.trim();
+      if (!val) {
+        const { configDir } = getPlatformPaths();
+        console.log(`  Skipped. Set ${envVar} later in ${resolve(configDir, 'env')}`);
+        done(null);
+      } else {
+        done({ key: envVar, value: val });
+      }
+    });
+  });
+}
+
+export function writeEnvFile(keys) {
+  const { configDir } = getPlatformPaths();
+  const envPath = resolve(configDir, 'env');
+  mkdirSync(configDir, { recursive: true });
+
+  let existing = {};
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq !== -1) existing[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+    }
   }
-  const config = JSON.parse(readFileSync(eaPath, 'utf8'));
-  config.mcpServers ??= {};
-  config.mcpServers[name] = server.externalMcpEntry;
-  writeFileSync(eaPath, JSON.stringify(config, null, 2) + '\n');
-  console.log(`  external-agents.json: added "${name}" to mcpServers`);
+
+  for (const { key, value } of keys) {
+    if (!existing[key]) existing[key] = value;
+  }
+
+  const content = Object.entries(existing).map(([k, v]) => `${k}=${v}`).join('\n') + '\n';
+  writeFileSync(envPath, content);
+  console.log(`  API keys written to ${envPath}`);
+}
+
+const EXTENSIONS_BLOCK = `extensions:
+  - type: builtin
+    name: developer
+    timeout: 300
+    bundled: true
+  - type: stdio
+    name: filesystem
+    cmd: npx
+    args:
+      - "@modelcontextprotocol/server-filesystem"
+      - "."
+    timeout: 300
+    available_tools:
+      - read_file
+      - read_multiple_files
+      - search_files
+      - list_directory
+      - get_file_info
+      - list_allowed_directories
+  - type: stdio
+    name: codebase-memory
+    cmd: codebase-memory-mcp
+    args:
+      - "--mcp"
+    timeout: 300
+    available_tools:
+      - index_repository
+      - index_status
+      - list_projects
+      - search_graph
+      - search_code
+      - get_code_snippet
+      - trace_path
+      - detect_changes
+      - query_graph
+      - get_graph_schema
+      - get_architecture
+`;
+
+function buildRecipe({ title, description, model, parameters, instructions, prompt }) {
+  const paramsYaml = parameters.map(p => [
+    `  - key: ${p.key}`,
+    `    input_type: string`,
+    `    requirement: required`,
+    `    description: "${p.description}"`,
+  ].join('\n')).join('\n');
+
+  const instructionsIndented = instructions.split('\n').map(l => `  ${l}`).join('\n');
+  const promptIndented = prompt.split('\n').map(l => `  ${l}`).join('\n');
+
+  return [
+    `version: 1.0.0`,
+    `title: "${title}"`,
+    `description: "${description}"`,
+    ``,
+    `settings:`,
+    `  goose_provider: "openrouter"`,
+    `  goose_model: "${model}"`,
+    ``,
+    `parameters:`,
+    paramsYaml,
+    ``,
+    `instructions: |`,
+    instructionsIndented,
+    ``,
+    `prompt: |`,
+    promptIndented,
+    ``,
+    `response:`,
+    `  json_schema:`,
+    `    type: object`,
+    `    properties:`,
+    `      review:`,
+    `        type: string`,
+    `        description: "The full review text in markdown"`,
+    `    required: ["review"]`,
+    ``,
+    EXTENSIONS_BLOCK,
+  ].join('\n');
+}
+
+export function writeRecipes() {
+  const { dataDir } = getPlatformPaths();
+  const extAgents = resolve(dataDir, 'ext-agents');
+  mkdirSync(extAgents, { recursive: true });
+
+  const __dir = dirname(fileURLToPath(import.meta.url));
+  const promptsDir = resolve(__dir, '..', '.claude', 'resources', 'prompts');
+
+  const readPrompt = (file) =>
+    readFileSync(resolve(promptsDir, file), 'utf8')
+      .replaceAll('{{PROJECT_ID}}', '{{ project_id }}');
+
+  const commonParams = [
+    { key: 'target', description: 'Path to target file or directory to review' },
+    { key: 'project_id', description: 'Codebase-memory project identifier' },
+  ];
+
+  const arNemesis = buildRecipe({
+    title: 'ar-nemesis — Red-Team Review',
+    description: 'Red-team review agent: failure modes, scale, security, ops, edge cases',
+    model: 'google/gemma-4-31b-it',
+    parameters: commonParams,
+    instructions: readPrompt('red-team-review.md'),
+    prompt: 'Review the target at: {{ target }}',
+  });
+
+  const arEnforcer = buildRecipe({
+    title: 'ar-enforcer — Principles Enforcement',
+    description: "Validates code and designs against the project's coding principles",
+    model: 'google/gemma-4-31b-it',
+    parameters: commonParams,
+    instructions: readPrompt('principles-enforcement.md'),
+    prompt: 'Review the target at: {{ target }}',
+  });
+
+  const pmEmberParams = [
+    { key: 'source', description: 'Path to source-of-truth document' },
+    { key: 'target', description: 'Path to target file or directory to validate' },
+  ];
+
+  const pmEmber = buildRecipe({
+    title: 'pm-ember — Pattern Match Validation',
+    description: 'Pattern matching validator: extracts claims from source and verifies in target',
+    model: 'google/gemma-4-31b-it',
+    parameters: pmEmberParams,
+    instructions: readPrompt('pattern-match.md'),
+    prompt: 'Source of truth: {{ source }}\nTarget: {{ target }}',
+  });
+
+  writeFileSync(resolve(extAgents, 'ar-nemesis.yaml'), arNemesis);
+  writeFileSync(resolve(extAgents, 'ar-enforcer.yaml'), arEnforcer);
+  writeFileSync(resolve(extAgents, 'pm-ember.yaml'), pmEmber);
+
+  const runMjsSrc = readFileSync(resolve(__dir, 'run.mjs'), 'utf8');
+  writeFileSync(resolve(extAgents, 'run.mjs'), runMjsSrc);
+  if (process.platform !== 'win32') {
+    execSync(`chmod +x "${resolve(extAgents, 'run.mjs')}"`);
+  }
+
+  console.log(`  Recipes written to ${extAgents}`);
+}
+
+export function installCli() {
+  const { dataDir, binDir } = getPlatformPaths();
+  const runMjsPath = resolve(dataDir, 'ext-agents', 'run.mjs');
+  const isWin = process.platform === 'win32';
+
+  mkdirSync(binDir, { recursive: true });
+
+  if (isWin) {
+    const shimPath = resolve(binDir, 'gabbro.cmd');
+    writeFileSync(shimPath, `@node "${runMjsPath}" %*\r\n`);
+  } else {
+    const linkPath = resolve(binDir, 'gabbro');
+    execSync(`ln -sf "${runMjsPath}" "${linkPath}"`);
+    execSync(`chmod +x "${runMjsPath}"`);
+  }
+  console.log(`  gabbro CLI installed to ${binDir}`);
 }
 
 async function main() {
@@ -281,6 +530,8 @@ async function main() {
   console.log(`\nScope: ${scope}\n`);
 
   for (const [name, server] of Object.entries(REGISTRY)) {
+    if (name === 'context7') continue; // npx-only, no binary to install
+
     if (server.platforms) {
       const target = detectTarget();
       if (!target || !server.platforms.includes(target.key)) {
@@ -294,10 +545,24 @@ async function main() {
 
     runPostInstall(name, server, scope);
     mergeMcpJson(name, server, scope);
-    mergeExternalAgents(name, server);
     console.log(`\n${name}: done`);
   }
-  console.log('\nAll servers installed.');
+
+  console.log('\nAPI Keys\n');
+  const keys = [];
+  const orKey = await promptApiKey('OpenRouter', 'OPENROUTER_API_KEY');
+  if (orKey) keys.push(orKey);
+  const c7Key = await promptApiKey('Context7', 'CONTEXT7_API_KEY');
+  if (c7Key) keys.push(c7Key);
+  if (keys.length) writeEnvFile(keys);
+
+  console.log('\nWriting recipes and CLI...');
+  writeRecipes();
+  installCli();
+
+  mergeMcpJson('context7', REGISTRY['context7'], scope);
+
+  console.log('\nAll done.');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

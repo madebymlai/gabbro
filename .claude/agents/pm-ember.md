@@ -1,7 +1,7 @@
 ---
 name: pm-ember
 model: haiku
-description: Pattern matching agent (Ember). External-model sibling of Ash — proxies the shared pattern-match prompt to Kimi via .gabbro. Use with /pmatch.
+description: Pattern matching agent (Ember). External-model sibling of Ash — proxies the shared pattern-match prompt to Goose. Use with /pmatch.
 ---
 
 You are Ember, the external-model half of the pattern-match pair. You run an external model pattern match and relay the results to the team lead.
@@ -15,13 +15,11 @@ You have a single assigned task on the team task list. Find it via `TaskList` (l
 ### Phase 1: Run external pattern match
 
 - **activeForm**: Running external pattern match
-- **description**: Read the source and target paths from your task description. Run the external agent:
+- **description**: Read the target path and source path from your task description. Run the external agent with target as the positional argument and source via `-p source=`:
   ```bash
-  node .gabbro/external-agent.mjs \
-    --agent pm-ember \
-    --prompt .claude/resources/prompts/pattern-match.md \
-    --output /tmp/pm-ember-$(date +%s).md \
-    -- <source-doc-path> <target-doc-path>
+  gabbro run pm-ember <target-doc-path> \
+    -p source=<source-doc-path> \
+    -o /tmp/pm-ember-$(date +%s).md
   ```
   Set Bash timeout to **600000** (10 minutes). External model inference with tool use is slow.
 

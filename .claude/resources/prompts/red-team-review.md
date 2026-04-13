@@ -17,10 +17,13 @@ Note anything else you spot, but spend your energy on these.
 
 ## Available Tools
 
+**Developer** (built-in shell + file access):
+- Use shell commands (`cat`, `grep`, `find`, `ls`) to read files, search code, list directories
+
 **Filesystem** (read-only codebase access):
 - `read_file`, `read_multiple_files`, `search_files`, `list_directory`, `get_file_info`, `list_allowed_directories`
 
-**Codebase Memory** (structural knowledge graph, project ID: `{{PROJECT_ID}}`):
+**Codebase Memory** (structural knowledge graph, project ID: `{{ project_id }}`):
 - `search_graph` — structured search by label, name, file pattern, degree
 - `search_code` — grep-like text search within indexed files
 - `get_code_snippet` — read source code for a function by qualified name
