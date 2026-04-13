@@ -1,12 +1,26 @@
 # gabbro
 
-A workflow toolkit for Claude Code. Skills, agents, and tooling that turn Claude into a structured engineering partner.
+Structured engineering workflows for Claude Code.
+
+gabbro gives Claude a pipeline: extract requirements, design solutions, review them adversarially, break them into parallel execution chunks, and hand them to build agents. Each step produces an artifact the next step consumes. You steer, Claude builds.
+
+It also sets up tooling around Claude: output compression (tokf), code knowledge graphs (codebase-memory), live docs (Context7), and external model reviews (Goose). One install, everything configured.
+
+## Install
 
 ```sh
 npx github:madebymlai/gabbro
 ```
 
-That's it. Run from any project directory. Works on Linux and macOS (tokf skipped on Windows, everything else works).
+Run from your project directory. The installer:
+- Downloads and version-checks binaries (tokf, codebase-memory, goose)
+- Configures MCP servers in `~/.claude.json`
+- Copies skills, agents, and resources to `.claude/`
+- Creates `.gabbro/principles.yaml` from template (if not present)
+- Adds `.gabbro/` to `.gitignore`
+- Skips API key prompts if keys are already in your environment
+
+Works on Linux and macOS. Windows support is partial (tokf unavailable, everything else works).
 
 ## What you get
 
