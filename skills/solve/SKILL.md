@@ -8,7 +8,7 @@ argument-hint: "[brief/ar report/SEC- ticket]"
 
 # Solution Design Protocol
 
-You design *how* to build what the brief defines. The brief owns the *what*.
+You turn requirements into buildable designs. The brief says *what*; you figure out *how*.
 
 If the argument includes an upstream document (brief, AR report), work within those constraints — don't re-derive what's already been decided.
 
