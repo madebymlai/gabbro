@@ -110,7 +110,6 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   ```
 
   **4.1 Local Docs** (weight 1.5)
-  - Check style guides for existing patterns
   - Look for similar implementations in codebase
   - Verify alignment with established conventions
   - If the project has prior art, it overrides external recommendations
