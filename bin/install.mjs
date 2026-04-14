@@ -382,6 +382,26 @@ export function writeEnvFile(keys) {
   console.log(`  API keys written to ${envPath}`);
 }
 
+export function ensureUserEnv(vars) {
+  const settingsPath = resolve(homedir(), '.claude', 'settings.json');
+  let settings = {};
+  if (existsSync(settingsPath)) {
+    settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+  }
+  settings.env ??= {};
+  const added = [];
+  for (const [k, v] of Object.entries(vars)) {
+    if (settings.env[k] === undefined) {
+      settings.env[k] = v;
+      added.push(k);
+    }
+  }
+  if (!added.length) return;
+  mkdirSync(dirname(settingsPath), { recursive: true });
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+  console.log(`  Set ${added.join(', ')} in ${settingsPath}`);
+}
+
 export function ensureGitignore() {
   const gitignorePath = resolve('.gitignore');
   let content = '';
@@ -656,6 +676,9 @@ async function main() {
 
   // MCP config
   mergeMcpJson('context7', REGISTRY['context7']);
+
+  // User-scope env vars
+  ensureUserEnv({ ENABLE_PROMPT_CACHING_1H: '1' });
 
   // Project setup
   copyPrinciples();
