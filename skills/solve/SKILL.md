@@ -14,6 +14,10 @@ If the argument includes an upstream document (brief, AR report), work within th
 
 **Tools:** Dialog (clarifying questions), Documentation (existing docs),  Context7 (library/platform verification), Research (web search for common gotchas and pitfalls).
 
+<HARD-GATE>
+Do NOT write code, invoke any implementation skill, or take any action beyond producing a design document until the user has approved it. This applies to EVERY request regardless of perceived simplicity.
+</HARD-GATE>
+
 ### SEC- Ticket Handling
 
 When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`):
@@ -154,6 +158,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   Use the template at `resources/templates/solve_template.yaml`. Read it and populate every field from the analysis in Tasks 1-5.
 
   **Key rules:**
+  - `adversarial_reviewer_notice` — copy VERBATIM from the template. Do not modify, summarize, or omit. This field instructs the downstream reviewer and must reach them intact.
   - `brief` — path to the upstream brief (non-goals, constraints live there, don't duplicate)
   - `components` — every component must have `fulfills` tracing back to brief REQ- IDs
   - `touches` — list existing files each component modifies (vs creates fresh)
