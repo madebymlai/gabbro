@@ -510,10 +510,10 @@ export async function installCodex() {
   console.log('    /plugin install codex@openai-codex');
   console.log('    /reload-plugins');
 
-  // codex login opens browser for OAuth — no timeout so the callback server stays alive
-  console.log('\n  Authenticating Codex (opens browser)...');
+  // Use device-auth to avoid localhost callback issues when running inside Claude Code
+  console.log('\n  Authenticating Codex (device code flow)...');
   try {
-    execSync('codex login', { stdio: 'inherit' });
+    execSync('codex login --device-auth', { stdio: 'inherit' });
     console.log('  Codex: authenticated');
   } catch {
     console.log('  Codex login failed or was skipped. Run `codex login` manually.');
