@@ -1,13 +1,13 @@
 ---
 name: ar
-description: Codex adversarial review loop. Runs adversarial review against a design doc until approved or escalates after 5 attempts.
+description: Codex adversarial review loop. Runs adversarial review against a design doc until approved or max 5 iterations, then proceeds to breakdown.
 allowed-tools: Read, Edit, Glob, Grep, Bash(gabbro:*), Skill
 argument-hint: "[path/to/design-doc.md]"
 ---
 
 # Codex Adversarial Review Protocol
 
-You run an adversarial review loop using Codex. The design document is reviewed repeatedly until Codex approves it or you escalate to the user.
+You run an adversarial review loop using Codex. The design document is reviewed repeatedly until Codex approves it or max iterations reached, then proceed to breakdown.
 
 ---
 
@@ -30,7 +30,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
      c. Parse the output for the verdict:
         - **`approve`** → Mark this task completed. Proceed to Task 2.
         - **`needs-attention`** → Read the findings. Edit the design doc in place to address material findings. Briefly note what you changed. Go to step 3a.
-        - **iteration >= 5** → Mark this task completed. Proceed to Task 3.
+        - **iteration >= 5** → Mark this task completed. Proceed to Task 2.
 
   **Rules:**
   - Address only material findings (high/critical severity, high confidence). Do not chase low-confidence or speculative concerns.
@@ -42,24 +42,13 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   Only escalate brief/design conflicts when the contradiction reveals an actual unresolved ambiguity (no clear decision was recorded).
 
-### Task 2: Report approval and hand off
+### Task 2: Hand off to breakdown
 
 - **activeForm**: Handing off to breakdown
-- **description**: Report: "Codex approved the design after [N] iteration(s)."
+- **description**: Report: "Review complete after [N] iteration(s)." (Note if approved or hit max iterations.)
 
   Then invoke the execution breakdown:
 
   `Skill("breakdown", args="[PATH]")`
 
   where [PATH] is the design doc path from the `/ar` argument.
-
-### Task 3: Escalate to user
-
-- **activeForm**: Escalating to user
-- **description**: Report: "Codex did not approve after 5 iterations. Latest findings:"
-
-  Show the most recent findings from Codex.
-
-  Ask: "Please review and decide how to proceed."
-
-  **STOP.** Do not invoke `/breakdown`. Do not continue the loop.
