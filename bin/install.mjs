@@ -529,13 +529,18 @@ export async function installCodex() {
     console.log('  Codex plugin already registered');
   }
 
-  // Use device-auth to avoid localhost callback issues when running inside Claude Code
-  console.log('\n  Authenticating Codex (device code flow)...');
+  // Check if already logged in before prompting
   try {
-    execSync('codex login --device-auth', { stdio: 'inherit' });
-    console.log('  Codex: authenticated');
+    const status = execSync('codex login status', { encoding: 'utf8', timeout: 10000 }).trim();
+    console.log(`  Codex: ${status}`);
   } catch {
-    console.log('  Codex login failed or was skipped. Run `codex login` manually.');
+    console.log('\n  Authenticating Codex (device code flow)...');
+    try {
+      execSync('codex login --device-auth', { stdio: 'inherit' });
+      console.log('  Codex: authenticated');
+    } catch {
+      console.log('  Codex login failed or was skipped. Run `codex login` manually.');
+    }
   }
 }
 
