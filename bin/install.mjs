@@ -514,7 +514,7 @@ export async function installCodex() {
   let changed = false;
   if (!settings.extraKnownMarketplaces?.['openai-codex']) {
     settings.extraKnownMarketplaces ??= {};
-    settings.extraKnownMarketplaces['openai-codex'] = { source: 'github', repo: 'openai/codex-plugin-cc' };
+    settings.extraKnownMarketplaces['openai-codex'] = { source: { source: 'github', repo: 'openai/codex-plugin-cc' } };
     changed = true;
   }
   if (!settings.enabledPlugins?.['codex@openai-codex']) {
