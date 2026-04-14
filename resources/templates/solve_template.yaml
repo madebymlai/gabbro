@@ -44,6 +44,9 @@ sources:
     url: "[url]"
     finding: "[what was learned]"
 
+# To challenge a decision below, the reviewer must show the stated
+# rationale is incorrect or that conditions have changed — not merely
+# propose the rejected alternative.
 decisions:
   - decision: "[What was decided]"
     fulfills: [REQ-001]
