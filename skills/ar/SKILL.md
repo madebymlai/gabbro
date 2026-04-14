@@ -37,6 +37,11 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   - Each edit should be targeted — fix what Codex flagged, don't rewrite unrelated sections.
   - After editing, briefly note what you changed before resubmitting.
 
+  **Brief vs Design mismatches:**
+  If a finding says "design contradicts brief" — check whether the design choice was explicitly discussed and approved during `/arm` or `/solve`. If yes, the brief is stale: amend it to match the design and continue the loop.
+
+  Only escalate brief/design conflicts when the contradiction reveals an actual unresolved ambiguity (no clear decision was recorded).
+
 ### Task 2: Report approval and hand off
 
 - **activeForm**: Handing off to breakdown
