@@ -47,7 +47,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 3: Probe for requirements, constraints, and style
 
 - **activeForm**: Probing for requirements
-- **description**: Ask questions one at a time to surface the user, the core requirement, constraints, non-goals, style, key concepts, and context. Drive the conversation — don't wait passively. Skip dimensions that are already obvious from context; follow signal, not a script.
+- **description**: Use `AskUserQuestion` to ask questions one at a time to surface the user, the core requirement, constraints, non-goals, style, key concepts, and context. Drive the conversation — don't wait passively. Skip dimensions that are already obvious from context; follow signal, not a script.
 
   **Go beyond the obvious.** The first answer is rarely the real requirement — it's a surface framing. Pull on threads: second-order consequences, edge cases the user hasn't considered, the problem *behind* the problem. A good brief captures what the user meant, not just what they said.
 
