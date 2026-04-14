@@ -34,7 +34,7 @@ ELSE:
 
 ## Phase 2: Principles (if selected)
 
-1. Read `.claude/resources/prompts/guides/principles-guide.md`
+1. Read `.claude/skills/tune/principles-guide.md`
 2. Follow the guide's "Presenting to the user" instructions
 3. Follow the guide's "Probe Instructions" for codebase exploration
 4. Before writing, check if `.gabbro/principles.yaml` exists:
@@ -50,7 +50,7 @@ Run `tokf discover --json` via Bash to find commands that ran without filters in
 - If discover finds nothing (new project, no session history): fall back to codebase exploration (Step 2)
 
 ### Step 2: Codebase exploration (fallback)
-Only if discover found nothing. Read `.claude/resources/prompts/guides/tokf-guide.md` and follow its probe instructions to discover commands from package.json, Makefile, justfile, etc.
+Only if discover found nothing. Read `.claude/skills/tune/tokf-guide.md` and follow its probe instructions to discover commands from package.json, Makefile, justfile, etc.
 
 ### Step 3: Write filters
 For each accepted filter, read `.claude/skills/tokf-filter/SKILL.md` for the full TOML reference (processing order, fields, templates). Use that knowledge to write proper filters, not just Level 1.
