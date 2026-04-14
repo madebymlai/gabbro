@@ -332,6 +332,10 @@ export function mergeMcpJson(name, server) {
     config = JSON.parse(readFileSync(mcpPath, 'utf8'));
   }
   config.mcpServers ??= {};
+  if (config.mcpServers[name]) {
+    console.log(`  ${mcpPath}: "${name}" already configured`);
+    return;
+  }
   config.mcpServers[name] = server.mcpEntry;
   writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`  ${mcpPath}: added "${name}"`);
