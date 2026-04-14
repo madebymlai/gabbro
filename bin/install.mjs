@@ -510,13 +510,9 @@ export async function installCodex() {
   console.log('    /plugin install codex@openai-codex');
   console.log('    /reload-plugins');
 
-  // codex login handles both checking and prompting
-  console.log('  Running codex login...');
-  try {
-    execSync('codex login', { stdio: 'inherit', timeout: 60000 });
-  } catch {
-    console.log('  Codex login failed or was skipped. Run `codex login` manually.');
-  }
+  // codex login is interactive (opens browser for OAuth)
+  console.log('\n  To authenticate Codex, run:');
+  console.log('    codex login');
 }
 
 
