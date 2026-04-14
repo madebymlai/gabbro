@@ -34,14 +34,27 @@ ELSE:
 
 ## Phase 2: Principles (if selected)
 
-1. Check if `.gabbro/principles.yaml` exists:
-   - If yes: Read it and note which principles are already configured
+1. Check if `.gabbro/principles.yaml` exists
 2. Read `.claude/skills/tune/principles-guide.md`
+
+### If existing principles found:
+
+Show: "You have N principles configured: [list them]"
+
+AskUserQuestion: "What would you like to do?"
+- "Add more" → proceed to catalog, show only unconfigured principles
+- "Remove some" → show existing principles as options, let user pick which to remove, then offer to add more
+- "Start fresh" → clear all, show full catalog
+
+### If no existing principles:
+
+Proceed directly to catalog.
+
+### Catalog flow:
+
 3. Follow the guide's "Presenting to the user" instructions
-   - Mark already-configured principles as "[already set]" in the catalog
-   - Skip them from selection by default
 4. Follow the guide's "Probe Instructions" for codebase exploration
-5. Write `.gabbro/principles.yaml` with existing + newly accepted principles
+5. Write `.gabbro/principles.yaml` with final set (kept + newly added)
 
 ## Phase 3: tokf Filters (if selected)
 
