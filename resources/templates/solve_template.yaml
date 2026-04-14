@@ -1,0 +1,64 @@
+# solve_template.yaml — Template for solution design documents
+# Used by /solve to create designs in .gabbro/artifacts/solutions/
+
+brief: "[path to brief]"
+
+components:
+  - name: "[Component Name]"
+    fulfills: [REQ-001, REQ-002]
+    description: "[What this component does]"
+    path: "[module/path/]"
+    dependencies: []
+    touches:
+      - file: "[existing file to modify]"
+        change: "[what changes]"
+    contracts: |
+      [Pydantic models, function signatures, API endpoints]
+
+  - name: "[Component Name]"
+    fulfills: [REQ-003]
+    description: "[What this component does]"
+    path: "[module/path/]"
+    dependencies: []
+    touches:
+      - file: "[existing file to modify]"
+        change: "[what changes]"
+    contracts: |
+      [Pydantic models, function signatures, API endpoints]
+
+build_order: [Component A, Component B]
+
+tech_stack:
+  - name: "[library/framework]"
+    version: "[version]"
+    purpose: "[why needed]"
+
+sources:
+  - type: local    # weight 1.5
+    path: "[file or module path]"
+    finding: "[what was found]"
+  - type: library  # weight 1.4
+    name: "[library name]"
+    finding: "[what was verified]"
+  - type: web      # weight 1.0
+    url: "[url]"
+    finding: "[what was learned]"
+
+decisions:
+  - decision: "[What was decided]"
+    fulfills: [REQ-001]
+    rationale: "[Why]"
+    alternative: "[What else was considered]"
+    why_rejected: "[Why alternative was rejected]"
+
+
+risks:
+  - risk: "[What could go wrong]"
+    impact: "[high/medium/low]"
+    mitigation: "[How to prevent or handle it]"
+
+executive_summary: |
+  [High-level impact and value]
+
+architecture: |
+  [Data flow, component relationships, system boundaries]

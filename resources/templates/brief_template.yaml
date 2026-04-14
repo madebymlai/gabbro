@@ -5,12 +5,14 @@ title: "[Title]"
 problem: "[What problem does this solve?]"
 
 requirements:
-  - user_story: "As a [role], I want [feature], so that [benefit]"
+  - id: REQ-001
+    user_story: "As a [role], I want [feature], so that [benefit]"
     acceptance_criteria:
       - "WHEN [event] THEN [system] SHALL [response]"
       - "IF [precondition] THEN [system] SHALL [response]"
 
-  - user_story: "As a [role], I want [feature], so that [benefit]"
+  - id: REQ-002
+    user_story: "As a [role], I want [feature], so that [benefit]"
     acceptance_criteria:
       - "WHEN [event] THEN [system] SHALL [response]"
 
