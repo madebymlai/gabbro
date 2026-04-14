@@ -41,9 +41,7 @@ ELSE:
    - Mark already-configured principles as "[already set]" in the catalog
    - Skip them from selection by default
 4. Follow the guide's "Probe Instructions" for codebase exploration
-5. Before writing, if `.gabbro/principles.yaml` existed:
-   - AskUserQuestion — "Overwrite existing", "Merge with existing", "Cancel"
-6. Write `.gabbro/principles.yaml` with all accepted principles
+5. Write `.gabbro/principles.yaml` with existing + newly accepted principles
 
 ## Phase 3: tokf Filters (if selected)
 
