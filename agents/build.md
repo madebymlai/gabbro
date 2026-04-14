@@ -18,7 +18,7 @@ Before writing any code, load these in order. Do not skip them:
 
 ## Task Tracking
 
-Create one `TaskCreate` per execution plan item. Use `TaskUpdate` with `addBlockedBy` to enforce sequential ordering when tasks depend on each other. Mark one task `in_progress` at a time; mark `completed` only when its acceptance criteria pass.
+Create one `TaskCreate` per execution plan item. Tasks within your YAML may have internal dependencies — use `addBlockedBy` to enforce ordering between them. Mark one task `in_progress` at a time; mark `completed` only when its acceptance criteria pass.
 
 ## Implementation Workflow
 
@@ -39,6 +39,15 @@ For each task:
 - [ ] Linting and type-check pass
 - [ ] No debug statements, commented-out code, or TODO/FIXME/HACK left behind
 
+## Completion
+
+When all tasks are done:
+
+1. Run final lint, type-check, and test commands
+2. **Send completion message to the lead**: `"DONE: [yaml-name] completed successfully"` or `"FAILED: [yaml-name] - [reason]"`
+
+The orchestrator waits for your message before spawning the next wave.
+
 ## Success
 
 You're done when:
@@ -46,3 +55,4 @@ You're done when:
 2. All tests pass
 3. Linting and type-check pass
 4. The execution doc's success criteria are met
+5. Completion message sent to the lead
