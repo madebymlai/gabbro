@@ -34,25 +34,36 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   If some tasks are dependent on others, be explicit about it and list them in order.
 
-### Task 3: Write execution YAML
+### Task 3: Write execution YAMLs
 
-- **activeForm**: Writing execution YAML
-- **description**: Use the template at `.claude/resources/templates/execution_template.yaml`. Write a single execution YAML to `.gabbro/artifacts/executions/<feature-name>.yaml`.
+- **activeForm**: Writing execution YAMLs
+- **description**: Use the template at `.claude/resources/templates/execution_template.yaml`. Create a directory at `.gabbro/artifacts/executions/<feature-name>/` with one YAML per build agent.
 
-  **The YAML is the build agent's entire context.** It must contain everything needed to implement all tasks without reading anything else. Populate every field from the template:
+  **Directory structure:**
+
+  ```
+  .gabbro/artifacts/executions/<feature-name>/
+  ├── 01-<scope>.yaml       # Build Agent 1
+  ├── 02-<scope>.yaml       # Build Agent 2
+  └── 03-<scope>.yaml       # Build Agent 3
+  ```
+
+  **Each YAML is the build agent's entire context.** It must contain everything that agent needs to implement its tasks without reading anything else. Populate every field from the template:
 
   - `solution` — path to the upstream design doc
   - `tasks` — each task with `id`, `name`, `fulfills`, `component`, `depends_on`, `description`, `files` (create/modify), `acceptance_criteria`, `code` (exact pattern), `tests` (file, cases with name + scenario), `progress: pending`
   - `testing` — framework, coverage target, structure
   - `progress` — status tracking with one entry per task
 
+  Use kebab-case for directory and file names.
+
   **Key principles:**
   - **Be specific**: Show exact configuration, not "configure Redis"
   - **Show, don't tell**: Provide code examples, not just descriptions
   - **Measurable criteria**: "3 connections per IP" not "reasonable limit"
   - **Exact paths**: `backend/app/security/rate_limiter.py` not "in security module"
-  - **~5 tasks per component group** — respect `depends_on` for ordering
-  - **No file conflicts** — two tasks should not modify the same file unless sequenced via `depends_on`
+  - **~5 tasks per agent** — one YAML per agent
+  - **No file conflicts** — two agents should not modify the same file
 
 ### Task 4: Run quality checklist
 
@@ -75,9 +86,9 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   **Buildability**
   - [ ] No ambiguous instructions that would make Sonnet guess?
-  - [ ] Execution YAML self-contained (no external reads needed)?
-  - [ ] File ownership clear (no two tasks editing the same file without depends_on)?
-  - [ ] Task dependencies explicit via depends_on?
+  - [ ] Each agent YAML self-contained (no external reads needed)?
+  - [ ] File ownership clear (no two agents editing the same file)?
+  - [ ] Dependencies between agent YAMLs explicit (via filename prefix ordering)?
 
 ---
 
@@ -150,8 +161,9 @@ Your plan is successful when:
 
 ## Auto-Roll
 
-After the execution documents pass the quality checklist, invoke the principles gate:
+After the execution YAMLs pass the quality checklist, invoke build:
 
-`Skill("pmatch", args=".gabbro/principles.yaml [execution-yaml]")`
+`Skill("build", args="[executions-dir]")`
 
-where `[execution-yaml]` is the path to the execution YAML written in Task 3 (e.g., `.gabbro/artifacts/executions/pipeline-restructure.yaml`).
+where `[executions-dir]` is the path to the executions directory created in Task 3 (e.g., `.gabbro/artifacts/executions/auth-redesign/`).
+
