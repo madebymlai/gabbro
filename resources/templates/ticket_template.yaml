@@ -1,0 +1,38 @@
+# ticket_template.yaml — Template for bug tickets
+# Used by /bugfest to create tickets in .gabbro/artifacts/tickets/
+
+title: "[Title]"
+reported_symptom: "[What was observed. User description or error output. No diagnosis — just facts.]"
+
+reproduction_steps:
+  - "[Step 1]"
+  - "[Step 2]"
+
+severity: "[critical | high | medium | low]"
+
+security_context:
+  exploit_scenario: ""
+  threat_category: ""
+  confidence: ""
+  vuln_ref: ""
+
+affected_surface:
+  modules: []
+  key_files: []
+  data_flow: ""
+  contracts_invariants: ""
+
+root_cause:
+  defect: ""
+  mechanism: ""
+  type: ""  # code defect | design flaw
+
+fix_plan:
+  changes: []
+  tests: []
+  blast_radius: ""
+
+resolution:
+  changes_made: []
+  tests_added: []
+  postmortem: ""

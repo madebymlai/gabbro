@@ -77,7 +77,7 @@ When input is a SEC- ticket path (matches `.gabbro/artifacts/sec/tickets/SEC-*`)
   Read `.gabbro/artifacts/tickets/manifest.yaml`. If it doesn't exist, create it with an empty `tickets: []` list. Find the highest existing ID and increment by 1.
 
   **2.2 Create ticket file**
-  Write `.gabbro/artifacts/tickets/NNN-slug.md` using the template at `.claude/resources/templates/ticket_template.md`. Fill in:
+  Write `.gabbro/artifacts/tickets/NNN-slug.yaml` using the template at `.claude/resources/templates/ticket_template.yaml`. Fill in:
   - **Title**: concise description of the symptom
   - **Reported Symptom**: what the user described, distilled from triage
   - **Reproduction Steps**: from triage conversation
