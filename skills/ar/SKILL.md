@@ -26,7 +26,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   2. Set iteration = 0.
   3. **LOOP**:
      a. iteration += 1
-     b. Invoke: `Skill("codex:adversarial-review", args="--wait review the design document at [PATH] — challenge architecture, tradeoffs, assumptions, and failure modes")`
+     b. Invoke: `Skill("codex:adversarial-review", args="--wait --model gpt-5.4 review the design document at [PATH] — challenge architecture, tradeoffs, assumptions, and failure modes")`
      c. Parse the Codex output for the verdict:
         - **`approve`** → Mark this task completed. Proceed to Task 2.
         - **`needs-attention`** → Read the findings. Edit the design doc in place to address material findings. Go to step 3a.
