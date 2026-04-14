@@ -39,12 +39,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   That's it — no deep exploration. Use the context to ask sharper questions. Do not dump a summary on the user.
 
-### Task 2: Offer visual companion (if applicable)
-
-- **activeForm**: Offering visual companion
-- **description**: If upcoming questions will involve visual content (mockups, layouts, diagrams), offer the visual companion per the "Visual Companion" section below. **The offer MUST be its own message** — no other content in the same turn. Skip this task entirely if the topic is purely textual.
-
-### Task 3: Probe for requirements, constraints, and style
+### Task 2: Probe for requirements, constraints, and style
 
 - **activeForm**: Probing for requirements
 - **description**: Use `AskUserQuestion` to ask questions one at a time to surface the user, the core requirement, constraints, non-goals, style, key concepts, and context. Drive the conversation — don't wait passively. Skip dimensions that are already obvious from context; follow signal, not a script.
@@ -58,7 +53,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   - **Prefer multiple choice** when there's a small clear set of options; open-ended when exploring
   - **YAGNI ruthlessly** — cut speculative requirements that aren't grounded in real user need
 
-### Task 4: Force remaining decisions
+### Task 3: Force remaining decisions
 
 - **activeForm**: Forcing final decisions
 - **description**: Use `AskUserQuestion` **once** to force final decisions on remaining ambiguities if needed. This is your single structured checkpoint.
@@ -72,12 +67,12 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   - Things that go better conversationally
   - Things you can reasonably infer
 
-### Task 5: Synthesize brief
+### Task 4: Synthesize brief
 
 - **activeForm**: Synthesizing brief
 - **description**: Write the brief to `.gabbro/artifacts/briefs/NN-[slug].yaml`. Check existing files to determine the next number (e.g., `07-user-auth.yaml`). Use the template at `.claude/resources/templates/brief_template.yaml`. Omit empty sections. Keep it tight.
 
-### Task 6: Self-review the brief
+### Task 5: Self-review the brief
 
 - **activeForm**: Self-reviewing brief
 - **description**: Read the brief with fresh eyes and fix issues inline:
@@ -91,16 +86,16 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   Fix inline. No re-review loop — fix and move on.
 
-### Task 7: User review gate
+### Task 6: User review gate
 
 - **activeForm**: Waiting for user approval
 - **description**: Ask the user to review the brief before handoff:
 
   > "Brief written to `<path>`. Please review it and let me know if you want any changes before we hand off to `/solve`."
 
-  If they request changes, make them and re-run the self-review (Task 6). Only proceed once approved.
+  If they request changes, make them and re-run the self-review (Task 5). Only proceed once approved.
 
-### Task 8: Hand off
+### Task 7: Hand off
 
 - **activeForm**: Handing off
 - **description**: Tell the user to run: `/solve .gabbro/artifacts/briefs/NN-slug.yaml`
@@ -125,23 +120,3 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 - If the request touches code with real problems (overgrown files, unclear boundaries, tangled responsibilities), note them in the brief as related scope — the way a good developer improves code they're working in.
 - Do not propose unrelated refactoring. Stay focused on what serves the current request.
 
----
-
-## Visual Companion
-
-A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
-
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
-> "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. Want to try it?"
-
-**This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. The message should contain ONLY the offer above and nothing else. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
-
-**Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
-
-- **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
-
-A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
-
-If they agree to the companion, read the detailed guide before proceeding:
-`.claude/skills/arm/visual-companion.md`
