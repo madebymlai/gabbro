@@ -505,10 +505,29 @@ export async function installCodex() {
     console.log('  Codex CLI installed');
   }
 
-  console.log('\n  To install the Codex plugin, run these commands in Claude Code:');
-  console.log('    /plugin marketplace add openai/codex-plugin-cc');
-  console.log('    /plugin install codex@openai-codex');
-  console.log('    /reload-plugins');
+  // Register Codex plugin via settings.json — Claude Code auto-installs on next session
+  const settingsPath = resolve('.claude', 'settings.json');
+  let settings = {};
+  if (existsSync(settingsPath)) {
+    settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+  }
+  let changed = false;
+  if (!settings.extraKnownMarketplaces?.some(m => m.repo === 'openai/codex-plugin-cc')) {
+    settings.extraKnownMarketplaces ??= [];
+    settings.extraKnownMarketplaces.push({ type: 'github', repo: 'openai/codex-plugin-cc' });
+    changed = true;
+  }
+  if (!settings.enabledPlugins?.['codex@openai-codex']) {
+    settings.enabledPlugins ??= {};
+    settings.enabledPlugins['codex@openai-codex'] = true;
+    changed = true;
+  }
+  if (changed) {
+    writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+    console.log('  Codex plugin registered in .claude/settings.json');
+  } else {
+    console.log('  Codex plugin already registered');
+  }
 
   // Use device-auth to avoid localhost callback issues when running inside Claude Code
   console.log('\n  Authenticating Codex (device code flow)...');
