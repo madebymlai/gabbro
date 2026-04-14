@@ -2,7 +2,7 @@
 name: build
 description: Implementation workflow. Orchestrates an agent team to implement execution breakdowns. Use after /breakdown and /pmatch validation.
 allowed-tools: Read, Glob, Grep, Task, Bash, Write, Edit
-argument-hint: "[path/to/execution-dir/]"
+argument-hint: "[path/to/execution.yaml]"
 agents:
   - name: build
     model: sonnet
@@ -22,44 +22,50 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 
 ---
 
-### Task 1: Create team
+### Task 1: Load execution plan and create team
 
 - **activeForm**: Creating team
-- **description**: The user provides a path to an execution directory (e.g., `.gabbro/artifacts/breakdowns/feature-name/`). This directory contains one self-contained doc per build agent: `01-<scope>.md`, `02-<scope>.md`, etc.
+- **description**: The user provides a path to an execution YAML (e.g., `.gabbro/artifacts/executions/auth-redesign.yaml`). Read it and understand the full task list, dependencies, and components.
 
-  List the agent docs to determine how many teammates to spawn. Use `TeamCreate` with a descriptive name (e.g., `build-[feature]`).
+  Group tasks into agent assignments (~5 tasks per agent) by component. Tasks in the same component go to the same agent. Respect `depends_on` — if agent B's tasks depend on agent A's tasks, they must be sequenced.
 
-### Task 2: Validate execution order and create teammate tasks
+  Use `TeamCreate` with a descriptive name (e.g., `build-[feature]`).
+
+### Task 2: Create teammate tasks with dependencies
 
 - **activeForm**: Creating teammate tasks
-- **description**: Read each numbered agent doc's **Dependencies** section to determine execution order:
-  - **Parallel**: Docs with "None (parallel)" → will spawn teammates concurrently
-  - **Sequential**: If `02-frontend.md` depends on `01-backend.md` → set task dependencies so the frontend task is blocked until backend completes
-
-  Create one task per agent doc using `TaskCreate`. Set `addBlockedBy` for any sequential dependencies so teammates can self-claim unblocked work.
+- **description**: Create one task per agent assignment using `TaskCreate`. Determine execution order from task `depends_on` fields:
+  - **Parallel**: Agent assignments with no cross-agent dependencies → spawn concurrently
+  - **Sequential**: If agent B has tasks depending on agent A's tasks → set `addBlockedBy`
 
 ### Task 3: Spawn build teammates
 
 - **activeForm**: Spawning build teammates
-- **description**: Send a single message with one `Task` tool call per agent doc. **Each teammate must use `subagent_type: build`, `model: sonnet`, and `mode: bypassPermissions`.**
+- **description**: Send a single message with one `Agent` tool call per agent assignment. **Each teammate must use `subagent_type: build`, `model: sonnet`, and `mode: bypassPermissions`.**
 
-  **CRITICAL: Pass the doc path, not the content.** The teammate reads its agent doc itself. Do NOT summarize, paraphrase, or re-encode any doc content into the spawn prompt. The docs contain exact code blocks, exact acceptance criteria, and exact file paths that must be read verbatim.
+  **CRITICAL: Pass the YAML path and task IDs, not the content.** The teammate reads the execution YAML itself and implements only its assigned tasks.
 
   **Spawn prompt template** (use this exactly):
 
   ```
-  Read the execution document at [ABSOLUTE_PATH_TO_DIR]/[NN-scope.md].
-  Implement all tasks in this document.
+  Read the execution plan at [ABSOLUTE_PATH_TO_YAML].
+  Implement tasks: [T-001, T-002, T-003, T-004, T-005]
   Working directory: [WORKING_DIRECTORY]
+
+  For each task:
+  1. Read the task's code block for the exact pattern
+  2. Create/modify the files listed
+  3. Verify acceptance_criteria
+  4. Run tests listed in the task
 
   When done, mark your task as completed and message the lead with a summary.
   ```
 
   After spawning all teammates, enter **delegate mode** (Shift+Tab) to restrict yourself to coordination-only tools: spawning, messaging, shutting down teammates, and managing tasks. Leads should lead, not code.
 
-  **File Ownership**: Ensure no two teammates edit the same file. The `/breakdown` execution docs already group tasks to avoid file conflicts between agents. If you detect overlap, sequence those agents with task dependencies instead of running them in parallel.
+  **File Ownership**: Ensure no two teammates edit the same file. Check `files.create` and `files.modify` across agent assignments. If you detect overlap, sequence those agents with task dependencies instead of running them in parallel.
 
-### Task 4: Monitor teammates
+### Task 4: Monitor teammates and update progress
 
 - **activeForm**: Monitoring teammates
 - **description**: While teammates work:
@@ -67,6 +73,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
   - If a teammate gets stuck, message them with guidance or spawn a replacement
   - If a teammate finishes, verify their task is marked completed and check for newly unblocked tasks
   - Let teammates self-claim unblocked tasks — intervene only when needed
+  - Update the execution YAML's `progress` section: set each task's status and timestamp, increment `completed` count
 
 ### Task 5: Shut down teammates and clean up team
 
@@ -79,7 +86,7 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 - **description**: Run post-build validation to confirm the implementation matches the plan:
 
   ```
-  /pmatch [execution_dir/] [relevant modules]
+  /pmatch [execution.yaml] [relevant modules]
   ```
 
   This validates that the implementation matches the plan.
@@ -87,8 +94,8 @@ After creating the team, create ALL tasks in full detail using `TaskCreate`. Pas
 ## Success Criteria
 
 The build orchestration is successful when:
-1. All execution sections completed by teammates
-2. All acceptance criteria from all sections verified
+1. All tasks in execution YAML completed by teammates
+2. All acceptance criteria from all tasks verified
 3. All tests passing (unit, integration, e2e as specified)
 4. No linting or type checking errors
 5. Success metrics from all sections achieved
@@ -98,8 +105,8 @@ The build orchestration is successful when:
 ## Remember
 
 - **You are the lead, not a builder** — delegate mode, don't write code
-- **One teammate per agent doc** — don't chunk further, `/breakdown` already did that
-- **Pass the doc path** — teammates read their agent doc themselves
+- **One teammate per component group** — ~5 tasks each, grouped by component
+- **Pass the YAML path and task IDs** — teammates read the execution YAML themselves
 - **Respect dependencies** — use task `blockedBy` for sequential sections
 - **Avoid file conflicts** — two teammates editing the same file = overwrites
 - **Document deviations** — if teammates deviate from the plan, understand why

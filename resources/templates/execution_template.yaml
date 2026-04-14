@@ -1,0 +1,67 @@
+# execution_template.yaml — Template for execution breakdowns
+# Used by /breakdown to create plans in .gabbro/artifacts/executions/
+
+solution: "[path to solve doc]"
+
+tasks:
+  - id: T-001
+    name: "[Task Name]"
+    fulfills: [REQ-001, REQ-002]
+    component: "[Component Name from solve doc]"
+    depends_on: []
+    description: "[What this accomplishes]"
+    files:
+      create:
+        - "[path/to/new_file]"
+      modify:
+        - "[path/to/existing_file]"
+    acceptance_criteria:
+      - "[Specific measurable outcome]"
+      - "[exact command to run, with expected output]"
+    code: |
+      ```
+      [exact pattern to follow]
+      ```
+    tests:
+      file: "[path/to/test_file]"
+      cases:
+        - name: "[test_case_name]"
+          scenario: "[Setup → Action → Expected]"
+    progress: pending
+
+  - id: T-002
+    name: "[Next Task]"
+    fulfills: [REQ-003]
+    component: "[Component Name]"
+    depends_on: [T-001]
+    description: "[What this accomplishes]"
+    files:
+      create: []
+      modify: []
+    acceptance_criteria:
+      - "[Specific measurable outcome]"
+    code: |
+      ```
+      [exact pattern to follow]
+      ```
+    tests:
+      file: "[path/to/test_file]"
+      cases: []
+    progress: pending
+
+testing:
+  framework: "[test framework and runner]"
+  coverage: "[minimum %]"
+  structure: "[colocated/centralized]"
+
+progress:
+  status: pending
+  completed: 0
+  total: 0
+  log:
+    - task: T-001
+      status: pending
+      timestamp: ""
+    - task: T-002
+      status: pending
+      timestamp: ""
