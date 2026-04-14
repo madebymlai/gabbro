@@ -26,7 +26,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   2. Set iteration = 0.
   3. **LOOP**:
      a. iteration += 1
-     b. Run: `gabbro ar [PATH]` (with `timeout: 600000`)
+     b. Run: `gabbro ar [PATH]` (with `timeout: 1500000`)
      c. Parse the output for the verdict:
         - **`approve`** → Mark this task completed. Proceed to Task 2.
         - **`needs-attention`** → Read the findings. Edit the design doc in place to address material findings. Briefly note what you changed. Go to step 3a.

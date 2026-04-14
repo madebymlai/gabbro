@@ -115,7 +115,7 @@ export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
   const result = spawnSync('node', [companionScript, 'adversarial-review', ...args], {
     encoding: 'utf8',
     maxBuffer: 50 * 1024 * 1024,
-    timeout: 600_000,
+    timeout: 1_500_000,
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
@@ -189,7 +189,7 @@ if (_calledAs === _thisFile) {
     env,
     encoding: 'utf8',
     maxBuffer: 50 * 1024 * 1024,
-    timeout: 600_000,
+    timeout: 1_500_000,
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
