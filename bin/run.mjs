@@ -10,8 +10,8 @@
 //
 // Usage: gabbro run <agent> <target> [-o output] [-p key=value ...]
 
-import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { readFileSync, writeFileSync, existsSync, realpathSync, readdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -29,6 +29,9 @@ const binDir = isWin
   ? join(process.env.LOCALAPPDATA, 'gabbro', 'bin')
   : join(homedir(), '.local', 'bin');
 const gooseBin = join(binDir, isWin ? 'goose.exe' : 'goose');
+
+// Defaults
+const DEFAULT_AR_MODEL = 'gpt-5.4';
 
 export function computeProjectId(cwd) {
   const id = cwd
@@ -86,6 +89,43 @@ export function extractReview(jsonStr) {
   throw new Error('No final output: recipe__final_output tool call not found in Goose output');
 }
 
+export function resolvePluginPath(marketplace, plugin) {
+  const pluginDir = join(homedir(), '.claude', 'plugins', 'cache', marketplace, plugin);
+  try {
+    const versions = readdirSync(pluginDir).sort();
+    return join(pluginDir, versions[versions.length - 1]);
+  } catch {
+    return null;
+  }
+}
+
+export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
+  const pluginPath = resolvePluginPath('openai-codex', 'codex');
+  if (!pluginPath) {
+    throw new Error('Codex plugin not found. Install via: claude plugins install codex@openai-codex');
+  }
+  const companionScript = join(pluginPath, 'scripts', 'codex-companion.mjs');
+  if (!existsSync(companionScript)) {
+    throw new Error(`Codex companion script not found at ${companionScript}`);
+  }
+
+  const prompt = `review the design document at ${docPath} — challenge architecture, tradeoffs, assumptions, and failure modes`;
+  const args = ['--wait', '--model', model, prompt];
+
+  const result = spawnSync('node', [companionScript, 'adversarial-review', ...args], {
+    encoding: 'utf8',
+    maxBuffer: 50 * 1024 * 1024,
+    timeout: 600_000,
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
+
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`Codex review failed with exit code ${result.status}`);
+  }
+  return result.stdout;
+}
+
 const _thisFile = fileURLToPath(import.meta.url);
 const _calledAs = (() => { try { return realpathSync(process.argv[1]); } catch { return process.argv[1]; } })();
 if (_calledAs === _thisFile) {
@@ -94,13 +134,38 @@ if (_calledAs === _thisFile) {
     options: {
       output: { type: 'string', short: 'o' },
       param:  { type: 'string', short: 'p', multiple: true },
+      model:  { type: 'string', short: 'm' },
     },
     allowPositionals: true,
   });
 
-  const [command, agentName, ...targetParts] = positionals;
+  const [command, ...rest] = positionals;
+
+  // gabbro ar <doc>
+  if (command === 'ar') {
+    const docPath = rest[0];
+    if (!docPath) {
+      process.stderr.write('Usage: gabbro ar <path/to/design.md> [-m model]\n');
+      process.exit(1);
+    }
+    if (!existsSync(docPath)) {
+      process.stderr.write(`File not found: ${docPath}\n`);
+      process.exit(1);
+    }
+    try {
+      const output = runAdversarialReview(docPath, flags.model);
+      process.stdout.write(output);
+    } catch (err) {
+      process.stderr.write(`Error: ${err.message}\n`);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  // gabbro run <agent> <target>
+  const [agentName, ...targetParts] = rest;
   if (command !== 'run' || !agentName || !targetParts.length) {
-    process.stderr.write('Usage: gabbro run <agent> <target> [-o output] [-p key=value ...]\n');
+    process.stderr.write('Usage:\n  gabbro ar <doc> [-m model]\n  gabbro run <agent> <target> [-o output] [-p key=value ...]\n');
     process.exit(1);
   }
 
