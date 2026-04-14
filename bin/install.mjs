@@ -512,9 +512,9 @@ export async function installCodex() {
     settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
   }
   let changed = false;
-  if (!settings.extraKnownMarketplaces?.some(m => m.repo === 'openai/codex-plugin-cc')) {
-    settings.extraKnownMarketplaces ??= [];
-    settings.extraKnownMarketplaces.push({ type: 'github', repo: 'openai/codex-plugin-cc' });
+  if (!settings.extraKnownMarketplaces?.['openai-codex']) {
+    settings.extraKnownMarketplaces ??= {};
+    settings.extraKnownMarketplaces['openai-codex'] = { source: 'github', repo: 'openai/codex-plugin-cc' };
     changed = true;
   }
   if (!settings.enabledPlugins?.['codex@openai-codex']) {
