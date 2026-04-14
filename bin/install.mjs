@@ -493,6 +493,52 @@ function buildRecipe({ title, description, model, parameters, instructions, prom
   ].join('\n');
 }
 
+export async function installCodex() {
+  console.log('\nInstalling Codex...');
+
+  const installed = getInstalledVersion('codex');
+  if (installed) {
+    console.log(`  Codex CLI ${installed} already installed`);
+  } else {
+    console.log('  Installing Codex CLI via npm...');
+    execSync('npm install -g @openai/codex', { stdio: 'inherit' });
+    console.log('  Codex CLI installed');
+  }
+
+  console.log('\n  To install the Codex plugin, run these commands in Claude Code:');
+  console.log('    /plugin marketplace add openai/codex-plugin-cc');
+  console.log('    /plugin install codex@openai-codex');
+  console.log('    /reload-plugins');
+
+  try {
+    const output = execSync('codex auth status', {
+      encoding: 'utf8',
+      timeout: 10000,
+    }).trim();
+    if (output.includes('logged in') || output.includes('authenticated')) {
+      console.log('  Codex: authenticated');
+    } else {
+      console.log('  Codex: not authenticated. Running codex login...');
+      execSync('codex login', { stdio: 'inherit' });
+    }
+  } catch {
+    console.log('  Codex: auth check failed. Run `codex login` manually.');
+  }
+}
+
+export function cleanupStaleRecipes() {
+  const { dataDir } = getPlatformPaths();
+  const extAgents = resolve(dataDir, 'ext-agents');
+  const staleRecipes = ['ar-enforcer.yaml', 'ar-nemesis.yaml'];
+  for (const recipe of staleRecipes) {
+    const recipePath = resolve(extAgents, recipe);
+    if (existsSync(recipePath)) {
+      rmSync(recipePath);
+      console.log(`  Removed stale recipe: ${recipe}`);
+    }
+  }
+}
+
 export function writeRecipes() {
   const { dataDir } = getPlatformPaths();
   const extAgents = resolve(dataDir, 'ext-agents');
@@ -503,29 +549,6 @@ export function writeRecipes() {
   const readPrompt = (file) =>
     readFileSync(resolve(promptsDir, file), 'utf8')
       .replaceAll('{{PROJECT_ID}}', '{{ project_id }}');
-
-  const commonParams = [
-    { key: 'target', description: 'Path to target file or directory to review' },
-    { key: 'project_id', description: 'Codebase-memory project identifier' },
-  ];
-
-  const arNemesis = buildRecipe({
-    title: 'ar-nemesis — Red-Team Review',
-    description: 'Red-team review agent: failure modes, scale, security, ops, edge cases',
-    model: 'google/gemma-4-31b-it',
-    parameters: commonParams,
-    instructions: readPrompt('red-team-review.md'),
-    prompt: 'Review the target at: {{ target }}',
-  });
-
-  const arEnforcer = buildRecipe({
-    title: 'ar-enforcer — Principles Enforcement',
-    description: "Validates code and designs against the project's coding principles",
-    model: 'google/gemma-4-31b-it',
-    parameters: commonParams,
-    instructions: readPrompt('principles-enforcement.md'),
-    prompt: 'Review the target at: {{ target }}',
-  });
 
   const pmEmberParams = [
     { key: 'source', description: 'Path to source-of-truth document' },
@@ -541,8 +564,6 @@ export function writeRecipes() {
     prompt: 'Source of truth: {{ source }}\nTarget: {{ target }}',
   });
 
-  writeFileSync(resolve(extAgents, 'ar-nemesis.yaml'), arNemesis);
-  writeFileSync(resolve(extAgents, 'ar-enforcer.yaml'), arEnforcer);
   writeFileSync(resolve(extAgents, 'pm-ember.yaml'), pmEmber);
 
   const runMjsSrc = readFileSync(resolve(__dir, 'run.mjs'), 'utf8');
@@ -592,6 +613,9 @@ async function main() {
     console.log(`\n${name}: done`);
   }
 
+  // Codex CLI + plugin
+  await installCodex();
+
   // API keys — skip prompt if already in environment
   console.log('\nAPI Keys\n');
   const keys = [];
@@ -615,9 +639,10 @@ async function main() {
   installAgents();
   installResources();
 
-  // Goose recipes + CLI
+  // Goose recipes + cleanup + CLI
   console.log('\nWriting recipes and CLI...');
   writeRecipes();
+  cleanupStaleRecipes();
   installCli();
 
   // MCP config
