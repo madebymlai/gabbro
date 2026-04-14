@@ -149,37 +149,28 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 ### Task 6: Write design document
 
 - **activeForm**: Writing design document
-- **description**: Save to `.gabbro/artifacts/solutions/NN-[solution-name].md` (e.g., `03-user-auth.md`). Check existing files in the directory to determine the next number.
+- **description**: Save to `.gabbro/artifacts/solutions/NN-[solution-name].yaml` (e.g., `03-user-auth.yaml`). Check existing files in the directory to determine the next number.
 
-  **Required Sections:**
+  Use the template at `resources/templates/solve_template.yaml`. Read it and populate every field from the analysis in Tasks 1-5.
 
-  **1. Executive Summary** — High-level impact and value
-
-  **2. Rationale** — Why this approach? Use decision table:
-
-  | Decision | Rationale | Alternative | Why Rejected |
-  |----------|-----------|-------------|--------------|
-  | ... | ... | ... | ... |
-
-  **3. Technology Stack** — Dependencies, models, libraries
-
-  **4. Architecture** — Data flow, component catalog, schemas
-
-  **5. Protocol/Schema** — Exact JSON/Pydantic definitions
-
-  **6. Implementation Details**
-  - File structure with explicit module placement:
-    ```
-    Handler → module/path/handler.py
-    Service → module/path/services/feature/
-    ```
-  - Integration points
-  - Specific code examples
+  **Key rules:**
+  - `brief` — path to the upstream brief (non-goals, constraints live there, don't duplicate)
+  - `components` — every component must have `fulfills` tracing back to brief REQ- IDs
+  - `touches` — list existing files each component modifies (vs creates fresh)
+  - `contracts` — exact schemas, function signatures, API endpoints (Markdown block)
+  - `build_order` — sequence for downstream `/breakdown` task delegation
+  - `sources` — every research finding from Task 4, tagged by type and weight
+  - `decisions` — every design choice with rationale and rejected alternatives
+  - `risks` — what could go wrong, impact, mitigation
+  - `executive_summary` — Markdown prose, high-level impact and value
+  - `architecture` — Markdown prose, data flow and component relationships
 
 ---
 
-## Handoff
+## Auto-Roll
 
-When the design document is written, suggest next steps:
-- `/ar .gabbro/artifacts/solutions/NN-[name].md` — adversarial review to stress-test the design
-- `/breakdown .gabbro/artifacts/solutions/NN-[name].md` — execution planning (after `/ar` approval)
+After the design document is written and the user approves it, invoke the adversarial review:
+
+`Skill("ar", args="[design-doc-path]")`
+
+where `[design-doc-path]` is the path to the design document written in Task 6.

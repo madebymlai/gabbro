@@ -136,3 +136,13 @@ Consensus: [High/Mixed] (agents agreed on X/Y items)
 [ ] GAPS — [N] items missing, review required
 [ ] PARTIAL — Significant gaps, likely needs revision
 ```
+
+---
+
+## Auto-Roll
+
+After producing the alignment report, invoke the build:
+
+`Skill("build", args="[breakdown-dir]")`
+
+The breakdown directory path is the second argument from the `/pmatch` invocation (the target). Pass it through to `/build`.

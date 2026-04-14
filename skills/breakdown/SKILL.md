@@ -164,3 +164,13 @@ Your plan is successful when:
 - **Show, don't tell** - Provide code examples, not just descriptions
 - **Think like Sonnet** - What would you need to know to implement this without any context?
 - **Test your plan** - Read it as if you knew nothing about the project
+
+---
+
+## Auto-Roll
+
+After the execution documents pass the quality checklist, invoke the principles gate:
+
+`Skill("pmatch", args=".gabbro/principles.yaml [breakdown-dir]")`
+
+where `[breakdown-dir]` is the path to the execution breakdown directory created in Task 3.
