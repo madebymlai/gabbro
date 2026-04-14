@@ -34,12 +34,16 @@ ELSE:
 
 ## Phase 2: Principles (if selected)
 
-1. Read `.claude/skills/tune/principles-guide.md`
-2. Follow the guide's "Presenting to the user" instructions
-3. Follow the guide's "Probe Instructions" for codebase exploration
-4. Before writing, check if `.gabbro/principles.yaml` exists:
-   - If yes: AskUserQuestion — "Overwrite existing", "Merge with existing", "Cancel"
-5. Write `.gabbro/principles.yaml` with all accepted principles
+1. Check if `.gabbro/principles.yaml` exists:
+   - If yes: Read it and note which principles are already configured
+2. Read `.claude/skills/tune/principles-guide.md`
+3. Follow the guide's "Presenting to the user" instructions
+   - Mark already-configured principles as "[already set]" in the catalog
+   - Skip them from selection by default
+4. Follow the guide's "Probe Instructions" for codebase exploration
+5. Before writing, if `.gabbro/principles.yaml` existed:
+   - AskUserQuestion — "Overwrite existing", "Merge with existing", "Cancel"
+6. Write `.gabbro/principles.yaml` with all accepted principles
 
 ## Phase 3: tokf Filters (if selected)
 
