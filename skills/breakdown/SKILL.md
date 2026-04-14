@@ -34,44 +34,25 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   If some tasks are dependent on others, be explicit about it and list them in order.
 
-### Task 3: Write execution documents
+### Task 3: Write execution YAML
 
-- **activeForm**: Writing execution documents
-- **description**: Use the template at `.claude/resources/templates/claude_execution_template.md`. Create a directory at `.gabbro/artifacts/breakdowns/<feature-name>/` with one self-contained document per build agent.
+- **activeForm**: Writing execution YAML
+- **description**: Use the template at `.claude/resources/templates/execution_template.yaml`. Write a single execution YAML to `.gabbro/artifacts/executions/<feature-name>.yaml`.
 
-  **Directory structure:**
+  **The YAML is the build agent's entire context.** It must contain everything needed to implement all tasks without reading anything else. Populate every field from the template:
 
-  ```
-  .gabbro/artifacts/breakdowns/<feature-name>/
-  ├── 01-<scope>.md         # Build Agent 1
-  ├── 02-<scope>.md         # Build Agent 2
-  └── 03-<scope>.md         # Build Agent 3
-  ```
-
-  **Each doc is the build agent's entire context.** It must contain everything that agent needs to implement its tasks without reading anything else:
-
-  1. **Title** - `# Build Agent N: [Scope/Module]`
-  2. **Dependencies** - Which other agent docs must complete first (by filename), or "None (parallel)"
-  3. **Overview** - Objective, scope (includes/excludes), dependencies, complexity — scoped to this agent's work
-  4. **Technical Approach** - Architecture decisions, module placement, integration points, data flow — only what this agent touches
-  5. **Task Breakdown** - ~5 detailed tasks with:
-     - Acceptance criteria (specific, measurable)
-     - Exact file paths
-     - Dependencies between tasks within this agent
-     - Code examples showing the pattern
-     - **Test cases** — named tests with setup, assertion, and file path. The builder implements them, not invents them.
-  6. **Testing Strategy** - Framework, structure, coverage targets for this agent's scope (per-task test cases go in the task breakdown, not here)
-  7. **Risk Mitigation** - 3-5 risks with probability, impact, mitigation, fallback, detection
-  8. **Success Criteria** - Functional and non-functional requirements for this agent
-  9. **Implementation Notes** - Gotchas, helpful commands, critical configuration
-
-  Use kebab-case for directory and file names (e.g., `plugin-restructure/`, `01-build-script.md`).
+  - `solution` — path to the upstream design doc
+  - `tasks` — each task with `id`, `name`, `fulfills`, `component`, `depends_on`, `description`, `files` (create/modify), `acceptance_criteria`, `code` (exact pattern), `tests` (file, cases with name + scenario), `progress: pending`
+  - `testing` — framework, coverage target, structure
+  - `progress` — status tracking with one entry per task
 
   **Key principles:**
   - **Be specific**: Show exact configuration, not "configure Redis"
   - **Show, don't tell**: Provide code examples, not just descriptions
   - **Measurable criteria**: "3 connections per IP" not "reasonable limit"
   - **Exact paths**: `backend/app/security/rate_limiter.py` not "in security module"
+  - **~5 tasks per component group** — respect `depends_on` for ordering
+  - **No file conflicts** — two tasks should not modify the same file unless sequenced via `depends_on`
 
 ### Task 4: Run quality checklist
 
@@ -94,9 +75,9 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 
   **Buildability**
   - [ ] No ambiguous instructions that would make Sonnet guess?
-  - [ ] Agent docs self-contained (no external reads needed)?
-  - [ ] File ownership clear (no two agents editing the same file)?
-  - [ ] Dependencies between agent docs explicit?
+  - [ ] Execution YAML self-contained (no external reads needed)?
+  - [ ] File ownership clear (no two tasks editing the same file without depends_on)?
+  - [ ] Task dependencies explicit via depends_on?
 
 ---
 
@@ -171,6 +152,6 @@ Your plan is successful when:
 
 After the execution documents pass the quality checklist, invoke the principles gate:
 
-`Skill("pmatch", args=".gabbro/principles.yaml [breakdown-dir]")`
+`Skill("pmatch", args=".gabbro/principles.yaml [execution-yaml]")`
 
-where `[breakdown-dir]` is the path to the execution breakdown directory created in Task 3.
+where `[execution-yaml]` is the path to the execution YAML written in Task 3 (e.g., `.gabbro/artifacts/executions/pipeline-restructure.yaml`).
