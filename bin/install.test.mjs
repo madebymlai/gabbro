@@ -27,7 +27,6 @@ import {
   getInstalledVersion,
   copyPrinciples,
   installCodex,
-  cleanupStaleRecipes,
 } from './install.mjs';
 
 // ── detectPlatform ────────────────────────────────────────────────────────────
@@ -650,51 +649,4 @@ test('copyPrinciples skips if already exists', () => {
 
 test('installCodex is exported as a function', () => {
   assert.equal(typeof installCodex, 'function');
-});
-
-// ── cleanupStaleRecipes ───────────────────────────────────────────────────────
-
-test('cleanupStaleRecipes removes ar files and preserves pm-ember', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    const extAgents = resolve(dir, '.local', 'share', 'gabbro', 'ext-agents');
-    mkdirSync(extAgents, { recursive: true });
-    writeFileSync(join(extAgents, 'ar-enforcer.yaml'), 'stale');
-    writeFileSync(join(extAgents, 'ar-nemesis.yaml'), 'stale');
-    writeFileSync(join(extAgents, 'pm-ember.yaml'), 'keep');
-
-    cleanupStaleRecipes();
-
-    assert.ok(!existsSync(join(extAgents, 'ar-enforcer.yaml')), 'ar-enforcer.yaml must be deleted');
-    assert.ok(!existsSync(join(extAgents, 'ar-nemesis.yaml')), 'ar-nemesis.yaml must be deleted');
-    assert.ok(existsSync(join(extAgents, 'pm-ember.yaml')), 'pm-ember.yaml must be preserved');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('cleanupStaleRecipes noop when files missing', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
-  const origHome = process.env.HOME;
-  const origPlatform = process.platform;
-  Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-  process.env.HOME = dir;
-  try {
-    const extAgents = resolve(dir, '.local', 'share', 'gabbro', 'ext-agents');
-    mkdirSync(extAgents, { recursive: true });
-    writeFileSync(join(extAgents, 'pm-ember.yaml'), 'keep');
-
-    assert.doesNotThrow(() => cleanupStaleRecipes());
-    assert.ok(existsSync(join(extAgents, 'pm-ember.yaml')), 'pm-ember.yaml must be preserved');
-  } finally {
-    Object.defineProperty(process, 'platform', { value: origPlatform, configurable: true });
-    process.env.HOME = origHome;
-    rmSync(dir, { recursive: true });
-  }
 });

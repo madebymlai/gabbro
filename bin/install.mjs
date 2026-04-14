@@ -526,18 +526,6 @@ export async function installCodex() {
   }
 }
 
-export function cleanupStaleRecipes() {
-  const { dataDir } = getPlatformPaths();
-  const extAgents = resolve(dataDir, 'ext-agents');
-  const staleRecipes = ['ar-enforcer.yaml', 'ar-nemesis.yaml'];
-  for (const recipe of staleRecipes) {
-    const recipePath = resolve(extAgents, recipe);
-    if (existsSync(recipePath)) {
-      rmSync(recipePath);
-      console.log(`  Removed stale recipe: ${recipe}`);
-    }
-  }
-}
 
 export function writeRecipes() {
   const { dataDir } = getPlatformPaths();
@@ -639,10 +627,9 @@ async function main() {
   installAgents();
   installResources();
 
-  // Goose recipes + cleanup + CLI
+  // Goose recipes + CLI
   console.log('\nWriting recipes and CLI...');
   writeRecipes();
-  cleanupStaleRecipes();
   installCli();
 
   // MCP config
