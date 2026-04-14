@@ -522,6 +522,20 @@ export async function installCodex() {
     settings.enabledPlugins['codex@openai-codex'] = true;
     changed = true;
   }
+  // SessionStart hook to strip disable-model-invocation from codex plugin
+  const patchScript = resolve(__dir, 'patch-codex-plugin.mjs');
+  const hookCmd = `node "${patchScript}"`;
+  const sessionHooks = settings.hooks?.SessionStart ?? [];
+  const hasHook = sessionHooks.some(h => h.hooks?.some(hh => hh.command?.includes('patch-codex-plugin')));
+  if (!hasHook) {
+    settings.hooks ??= {};
+    settings.hooks.SessionStart ??= [];
+    settings.hooks.SessionStart.push({
+      hooks: [{ type: 'command', command: hookCmd, timeout: 5 }],
+    });
+    changed = true;
+  }
+
   if (changed) {
     writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
     console.log('  Codex plugin registered in .claude/settings.json');
