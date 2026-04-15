@@ -678,7 +678,7 @@ async function main() {
   mergeMcpJson('context7', REGISTRY['context7']);
 
   // User-scope env vars
-  ensureUserEnv({ ENABLE_PROMPT_CACHING_1H: '1' });
+  ensureUserEnv({ CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1', CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING: '1' });
 
   // Project setup
   copyPrinciples();
