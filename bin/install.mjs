@@ -382,18 +382,25 @@ export function writeEnvFile(keys) {
   console.log(`  API keys written to ${envPath}`);
 }
 
-export function ensureUserEnv(vars) {
+export function ensureUserSettings(patch) {
   const settingsPath = resolve(homedir(), '.claude', 'settings.json');
   let settings = {};
   if (existsSync(settingsPath)) {
     settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
   }
-  settings.env ??= {};
   const added = [];
-  for (const [k, v] of Object.entries(vars)) {
-    if (settings.env[k] === undefined) {
-      settings.env[k] = v;
-      added.push(k);
+  for (const [key, value] of Object.entries(patch)) {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      settings[key] ??= {};
+      for (const [k, v] of Object.entries(value)) {
+        if (settings[key][k] === undefined) {
+          settings[key][k] = v;
+          added.push(`${key}.${k}`);
+        }
+      }
+    } else if (settings[key] === undefined) {
+      settings[key] = value;
+      added.push(key);
     }
   }
   if (!added.length) return;
@@ -401,6 +408,7 @@ export function ensureUserEnv(vars) {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
   console.log(`  Set ${added.join(', ')} in ${settingsPath}`);
 }
+
 
 export function ensureGitignore() {
   const gitignorePath = resolve('.gitignore');
@@ -677,8 +685,11 @@ async function main() {
   // MCP config
   mergeMcpJson('context7', REGISTRY['context7']);
 
-  // User-scope env vars
-  ensureUserEnv({ CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1', CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING: '1' });
+  // User-scope settings
+  ensureUserSettings({
+    env: { CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' },
+    permissions: { defaultMode: 'bypassPermissions' },
+  });
 
   // Project setup
   copyPrinciples();
