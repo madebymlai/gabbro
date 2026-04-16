@@ -411,6 +411,63 @@ test('context7 registry entry has mcpEntry with npx command', () => {
   assert.ok(Array.isArray(context7.mcpEntry.args), 'context7 mcpEntry must have args');
 });
 
+test('mergeMcpJson resolves ${VAR} placeholders from envOverrides', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
+  try {
+    const entry = {
+      command: 'npx',
+      args: ['-y', 'some-mcp'],
+      env: { SOME_KEY: '${SOME_KEY}' },
+    };
+    mergeMcpJson('some-mcp', { mcpEntry: entry }, { SOME_KEY: 'literal-value' });
+
+    const config = JSON.parse(readFileSync(join(dir, '.claude.json'), 'utf8'));
+    assert.equal(config.mcpServers['some-mcp'].env.SOME_KEY, 'literal-value',
+      'placeholder must be resolved to the override value');
+    assert.equal(entry.env.SOME_KEY, '${SOME_KEY}',
+      'caller-provided entry must not be mutated');
+  } finally {
+    process.env.HOME = origHome;
+    rmSync(dir, { recursive: true });
+  }
+});
+
+test('mergeMcpJson falls back to process.env when no override given', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
+  process.env.__GABBRO_TEST_KEY = 'from-process-env';
+  try {
+    const entry = { command: 'x', env: { __GABBRO_TEST_KEY: '${__GABBRO_TEST_KEY}' } };
+    mergeMcpJson('x', { mcpEntry: entry });
+
+    const config = JSON.parse(readFileSync(join(dir, '.claude.json'), 'utf8'));
+    assert.equal(config.mcpServers['x'].env.__GABBRO_TEST_KEY, 'from-process-env');
+  } finally {
+    process.env.HOME = origHome;
+    delete process.env.__GABBRO_TEST_KEY;
+    rmSync(dir, { recursive: true });
+  }
+});
+
+test('mergeMcpJson leaves placeholder intact when no value available', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gabbro-test-'));
+  const origHome = process.env.HOME;
+  process.env.HOME = dir;
+  try {
+    const entry = { command: 'x', env: { NOPE_UNSET_VAR: '${NOPE_UNSET_VAR}' } };
+    mergeMcpJson('x', { mcpEntry: entry });
+
+    const config = JSON.parse(readFileSync(join(dir, '.claude.json'), 'utf8'));
+    assert.equal(config.mcpServers['x'].env.NOPE_UNSET_VAR, '${NOPE_UNSET_VAR}');
+  } finally {
+    process.env.HOME = origHome;
+    rmSync(dir, { recursive: true });
+  }
+});
+
 // ── Task (Agent 2): writeRecipes copies final run.mjs ─────────────────────────
 
 test('writeRecipes copies run.mjs with extractReview implementation', () => {

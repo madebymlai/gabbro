@@ -324,7 +324,7 @@ export function runPostInstall(name, server) {
   console.log(`  Configuration applied.`);
 }
 
-export function mergeMcpJson(name, server) {
+export function mergeMcpJson(name, server, envOverrides = {}) {
   if (!server.mcpEntry) return;
   const mcpPath = resolve(homedir(), '.claude.json');
   let config = {};
@@ -336,7 +336,18 @@ export function mergeMcpJson(name, server) {
     console.log(`  ${mcpPath}: "${name}" already configured`);
     return;
   }
-  config.mcpServers[name] = server.mcpEntry;
+  const entry = JSON.parse(JSON.stringify(server.mcpEntry));
+  if (entry.env) {
+    for (const k of Object.keys(entry.env)) {
+      const v = entry.env[k];
+      const m = typeof v === 'string' && v.match(/^\$\{([A-Z_][A-Z0-9_]*)\}$/);
+      if (m) {
+        const resolved = envOverrides[m[1]] ?? process.env[m[1]];
+        if (resolved) entry.env[k] = resolved;
+      }
+    }
+  }
+  config.mcpServers[name] = entry;
   writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n');
   console.log(`  ${mcpPath}: added "${name}"`);
 }
@@ -682,8 +693,10 @@ async function main() {
   writeRecipes();
   installCli();
 
-  // MCP config
-  mergeMcpJson('context7', REGISTRY['context7']);
+  // MCP config — resolve ${VAR} placeholders with freshly-collected keys
+  // so Context7 works without requiring users to source gabbro's env file.
+  const envOverrides = Object.fromEntries(keys.map(({ key, value }) => [key, value]));
+  mergeMcpJson('context7', REGISTRY['context7'], envOverrides);
 
   // User-scope settings
   ensureUserSettings({
