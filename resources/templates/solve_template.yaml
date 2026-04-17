@@ -11,9 +11,11 @@ components:
     dependencies: []
     touches:
       - file: "[existing file to modify]"
-        change: "[what changes]"
+        change: "[semantic description of what changes — NOT code bodies or pseudocode]"
     contracts: |
-      [Pydantic models, function signatures, API endpoints]
+      [Specifications only: Pydantic model shapes, function signatures, API endpoint
+       shapes, data schemas. No implementation bodies, no pseudocode, no control flow.
+       If you find yourself writing `if`, `for`, or a function body, stop — that's /breakdown's job.]
 
   - name: "[Component Name]"
     fulfills: [REQ-003]
@@ -22,9 +24,9 @@ components:
     dependencies: []
     touches:
       - file: "[existing file to modify]"
-        change: "[what changes]"
+        change: "[semantic description of what changes — NOT code bodies or pseudocode]"
     contracts: |
-      [Pydantic models, function signatures, API endpoints]
+      [Specifications only: signatures, schemas, endpoints. No implementation bodies.]
 
 build_order: [Component A, Component B]
 

@@ -38,6 +38,8 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
 - **activeForm**: Clarifying requirements
 - **description**: Read the input — a brief from `/arm` (YAML), a raw prompt, or an upstream document. Extract the requirements, constraints, and non-goals.
 
+  **Also load principles now.** Locate the project's principles file by walking up from the input path to find `.gabbro/principles.yaml`. Read it fully. Keep the list of principles (name + rule + ask questions) in mind throughout every subsequent task — analysis, discussion, and document writing. If no principles file exists, note it and continue.
+
   If the input is a brief: read it, confirm you understand it, and ask about anything ambiguous or missing. Don't re-probe what `/arm` already covered.
 
   If the input is a raw prompt (no brief): ask enough to understand the problem, constraints, and scope before proceeding. Use `AskUserQuestion` for structured choices when there are clear trade-offs.
@@ -160,14 +162,25 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   **Key rules:**
   - `brief` — path to the upstream brief (non-goals, constraints live there, don't duplicate)
   - `components` — every component must have `fulfills` tracing back to brief REQ- IDs
-  - `touches` — list existing files each component modifies (vs creates fresh)
-  - `contracts` — exact schemas, function signatures, API endpoints (Markdown block)
+  - `touches` — list existing files each component modifies (vs creates fresh). `change` is a *semantic description* of what changes, NOT code or pseudocode
+  - `contracts` — specifications only: schemas, function signatures, API endpoint shapes. **No implementation bodies, no pseudocode, no control flow.** If you catch yourself writing `if`, `for`, or a function body, stop — that's `/breakdown`'s job
   - `build_order` — sequence for downstream `/breakdown` task delegation
   - `sources` — every research finding from Task 4, tagged by type and weight
   - `decisions` — every design choice with rationale and rejected alternatives
   - `risks` — what could go wrong, impact, mitigation
   - `executive_summary` — Markdown prose, high-level impact and value
   - `architecture` — Markdown prose, data flow and component relationships
+
+### Task 7: Run principles checklist
+
+- **activeForm**: Running principles checklist
+- **description**: If no principles file was loaded in Task 1, skip. Otherwise, write one line per principle in this exact format:
+
+  ```
+  - <principle-name>: <OK | violates | N/A> — <design element proving it, or reason N/A>
+  ```
+
+  One line per principle, no skipping. If any line is `violates`, revise the design and rewrite the list until all lines are `OK` or `N/A`.
 
 ---
 
