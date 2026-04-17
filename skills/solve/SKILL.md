@@ -158,7 +158,6 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
   Use the template at `resources/templates/solve_template.yaml`. Read it and populate every field from the analysis in Tasks 1-5.
 
   **Key rules:**
-  - `adversarial_reviewer_notice` — copy VERBATIM from the template. Do not modify, summarize, or omit. This field instructs the downstream reviewer and must reach them intact.
   - `brief` — path to the upstream brief (non-goals, constraints live there, don't duplicate)
   - `components` — every component must have `fulfills` tracing back to brief REQ- IDs
   - `touches` — list existing files each component modifies (vs creates fresh)

@@ -1,6 +1,6 @@
 ---
 name: ar
-description: Codex adversarial review loop. Runs adversarial review against a design doc until approved or max 5 iterations, then proceeds to breakdown.
+description: Adversarial review workflow. Loops `gabbro ar` against a design doc, editing it to address findings each iteration. Hands off to /breakdown after approval or 3 iterations.
 allowed-tools: Read, Edit, Glob, Grep, Bash(gabbro:*), Skill
 argument-hint: "[path/to/design-doc.md]"
 ---
@@ -30,7 +30,7 @@ Before any work, create ALL tasks in full detail using `TaskCreate`. Pass the **
      c. Parse the output for the verdict:
         - **`approve`** → Mark this task completed. Proceed to Task 2.
         - **`needs-attention`** → Read the findings. Edit the design doc in place to address material findings. Briefly note what you changed. Go to step 3a.
-        - **iteration >= 5** → Mark this task completed. Proceed to Task 2.
+        - **iteration >= 3** → Mark this task completed. Proceed to Task 2.
 
   **Rules:**
   - Address only material findings (high/critical severity, high confidence). Do not chase low-confidence or speculative concerns.

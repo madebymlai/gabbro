@@ -178,60 +178,60 @@ principles:
       - Do multiple tests use slightly different versions of the same base object?
 
   # ── Security ───────────────────────────────────────────────────────────────
-  - name: Parameterized Queries Only
+  - name: Trust Boundary Discipline
     category: Security
-    rule: Never concatenate user input into SQL or query strings.
+    rule: Every crossing between trust zones must have an explicit, enumerated contract for what enters and leaves.
     ask:
-      - Is any part of this query built by string concatenation?
-      - Could a user-supplied value change the structure of this query?
-      - Is there a parameterized API available that I'm not using?
-      - Would an injection attack here affect other users' data?
+      - Where are the trust boundaries in this change, and is each one identified?
+      - What data crosses inward, and is it validated/normalized at the boundary rather than deep inside?
+      - What data crosses outward, and is it encoded for its destination sink (HTML, SQL, shell, log)?
+      - Are boundary checks centralized so they cannot be bypassed by an alternate code path?
 
-  - name: No Secrets in Code
+  - name: Identity and Authorization on Every Access
     category: Security
-    rule: Credentials, tokens, and keys must come from environment or secrets manager — never hardcoded.
+    rule: Every request must carry an authenticated identity and pass an explicit authorization check at the resource, not just the route.
     ask:
-      - Does this file contain any API keys, passwords, or tokens?
-      - Would this commit expose credentials if the repo were made public?
-      - Is there a secrets manager or env var this value should come from instead?
-      - Does the CI pipeline inject this value safely at runtime?
+      - Who is the acting principal, and where is that established in this code path?
+      - Is authorization checked against the specific object/row, not just the endpoint?
+      - Can an attacker swap an ID in the request and reach another tenant's data (IDOR)?
+      - Are privileged operations gated by a distinct check from read operations?
 
-  - name: Validate External Input
+  - name: Least Privilege and Blast Radius
     category: Security
-    rule: All data crossing a trust boundary must be validated before use.
+    rule: Every component, credential, and token should hold the minimum scope and lifetime needed to do its job.
     ask:
-      - Is this value coming from a user, API, or file that could be adversarial?
-      - Am I using this external value before checking its shape or bounds?
-      - Would an unexpected type or size here cause a crash or data corruption?
-      - Is there a schema or validator that should gate this input?
+      - What is the maximum damage if this credential/service/process is fully compromised?
+      - Can the scope be narrowed (read-only, single tenant, single resource, shorter TTL)?
+      - Are secrets rotatable and revocable without code changes?
+      - Does this process need the filesystem, network, or privileges it currently has?
 
   # ── Performance ────────────────────────────────────────────────────────────
-  - name: No N+1 Queries
+  - name: Know the Dominant Cost
     category: Performance
-    rule: Fetch related data in bulk, not one record at a time in a loop.
+    rule: Optimize only what profiling or back-of-envelope analysis shows to dominate; reject changes justified by intuition alone.
     ask:
-      - Is there a database query inside a loop that iterates over query results?
-      - Would this code issue O(n) queries for n records?
-      - Is there a JOIN or batch fetch that would replace this loop?
-      - Does the ORM have an eager-loading option that should be used here?
+      - Where is the time actually spent — CPU, I/O wait, lock contention, GC, network?
+      - Is there a profile, flamegraph, or measurement attached to this change?
+      - Are the numbers consistent with known latency orders of magnitude?
+      - Will this optimization move a dominant cost, or shave a negligible one?
 
-  - name: Bound Resource Consumption
+  - name: Bounded Resource Use Under Load
     category: Performance
-    rule: All loops, queues, and allocations have explicit upper bounds.
+    rule: Every queue, pool, buffer, retry, and concurrency primitive must have an explicit upper bound and a defined behavior when full.
     ask:
-      - Can this loop or recursion run indefinitely on adversarial input?
-      - Is there a max page size or limit on this query?
-      - Would processing a very large input here exhaust memory or time out?
-      - Is there a circuit breaker or timeout on this external call?
+      - What is the max size of every queue, connection pool, and in-memory buffer here?
+      - When a bound is hit, does it shed load, block, or reject with backpressure?
+      - Are retries bounded, jittered, and subject to a circuit breaker?
+      - Can a slow dependency cause unbounded memory or thread growth upstream?
 
-  - name: No Circular Dependencies
+  - name: Minimize Work per Request
     category: Performance
-    rule: Module dependency graph must be a DAG — no cycles.
+    rule: Do the least work on the hot path; push everything else to async, batch, or build time.
     ask:
-      - Does module A import module B which imports module A?
-      - Would a dependency graph tool show a cycle here?
-      - Is this circular dependency hiding a missing abstraction both modules should depend on?
-      - Would splitting one of these modules break the cycle cleanly?
+      - Is anything on this path that could run offline, lazily, or at startup?
+      - Are results cached where inputs and invalidation rules are well-defined?
+      - Is work batched across requests where semantics allow?
+      - Are payload sizes and field sets trimmed to what the caller actually uses?
 
   # ── Rust ───────────────────────────────────────────────────────────────────
   - name: No unwrap in Library Code

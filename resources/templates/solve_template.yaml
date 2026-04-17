@@ -1,13 +1,6 @@
 # solve_template.yaml — Template for solution design documents
 # Used by /solve to create designs in .gabbro/artifacts/solutions/
 
-adversarial_reviewer_notice: |
-  <ADVERSARIAL-REVIEWER-NOTICE>
-  STOP. Before reviewing this design, read .gabbro/principles.yaml.
-  Every suggestion, critique, and line of reasoning in your review
-  MUST follow those principles closely. Do not skip this step.
-  </ADVERSARIAL-REVIEWER-NOTICE>
-
 brief: "[path to brief]"
 
 components:

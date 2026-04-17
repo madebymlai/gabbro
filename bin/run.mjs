@@ -11,9 +11,9 @@
 // Usage: gabbro run <agent> <target> [-o output] [-p key=value ...]
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, realpathSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, realpathSync, readdirSync, mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
@@ -99,6 +99,33 @@ export function resolvePluginPath(marketplace, plugin) {
   }
 }
 
+export function findGabbroDir(startPath) {
+  let dir = resolve(startPath);
+  while (true) {
+    const candidate = join(dir, '.gabbro');
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+export function findPrinciplesFile(startPath) {
+  const gabbroDir = findGabbroDir(startPath);
+  if (!gabbroDir) return null;
+  const candidate = join(gabbroDir, 'principles.yaml');
+  return existsSync(candidate) ? candidate : null;
+}
+
+function loadAdversarialReviewPrompt(docPath, principlesPath, { resume = false } = {}) {
+  const templateName = resume ? 'adversarial-review-resume.md' : 'adversarial-review.md';
+  const templatePath = join(dirname(fileURLToPath(import.meta.url)), '..', 'resources', 'prompts', templateName);
+  let template = readFileSync(templatePath, 'utf8');
+  template = template.replaceAll('{{DOC_PATH}}', docPath);
+  template = template.replaceAll('{{PRINCIPLES_PATH}}', principlesPath || '(no principles file configured for this project)');
+  return template.trim();
+}
+
 export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
   const pluginPath = resolvePluginPath('openai-codex', 'codex');
   if (!pluginPath) {
@@ -109,10 +136,21 @@ export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
     throw new Error(`Codex companion script not found at ${companionScript}`);
   }
 
-  const prompt = `review the design document at ${docPath} — challenge architecture, tradeoffs, assumptions, and failure modes`;
-  const args = ['--wait', '--model', model, prompt];
+  const absDocPath = resolve(docPath);
+  const principlesPath = findPrinciplesFile(dirname(absDocPath));
 
-  const result = spawnSync('node', [companionScript, 'adversarial-review', ...args], {
+  const gabbroDir = findGabbroDir(dirname(absDocPath));
+  const stateFile = gabbroDir ? join(gabbroDir, '.ar-last-doc') : null;
+  const sameDocAsLast = stateFile && existsSync(stateFile) && readFileSync(stateFile, 'utf8').trim() === absDocPath;
+
+  const prompt = loadAdversarialReviewPrompt(absDocPath, principlesPath, { resume: sameDocAsLast });
+
+  const args = ['task', '--model', model];
+  if (sameDocAsLast) args.push('--resume-last');
+  else args.push('--fresh');
+  args.push(prompt);
+
+  const result = spawnSync('node', [companionScript, ...args], {
     encoding: 'utf8',
     maxBuffer: 50 * 1024 * 1024,
     timeout: 600_000,
@@ -123,6 +161,9 @@ export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
   if (result.status !== 0) {
     throw new Error(`Codex review failed with exit code ${result.status}`);
   }
+
+  if (stateFile) writeFileSync(stateFile, absDocPath);
+
   return result.stdout;
 }
 
