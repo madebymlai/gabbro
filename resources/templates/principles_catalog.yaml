@@ -76,6 +76,16 @@ principles:
       - Is the shared concept real, or am I forcing an abstraction over unrelated code?
       - If the rule behind this duplication changes, will all copies need to change together?
 
+  # ── Forward-First ──────────────────────────────────────────────────────────
+  - name: Forward-First
+    category: Forward-First
+    rule: Build for the future, not the past. No backward-compatibility shims unless explicitly required.
+    ask:
+      - Is this shim adding complexity for a migration that should just happen?
+      - Am I keeping dead code alive for compatibility?
+      - Is this re-export or wrapper only here to avoid updating callers?
+      - Would removing this backward-compat layer simplify the codebase without breaking anything?
+
   # ── No Defensive Garbage ───────────────────────────────────────────────────
   - name: No Defensive Garbage
     category: No Defensive Garbage
