@@ -15,15 +15,10 @@ import {
     getCodexAvailability,
     getSessionRuntimeStatus,
     interruptAppServerTurn,
-    parseStructuredOutput,
-    readOutputSchema,
-    runAppServerReview,
     runAppServerTurn
   } from "../lib/codex/codex.mjs";
 import { readStdinIfPiped } from "../lib/codex/fs.mjs";
-import { collectReviewContext, ensureGitRepository, resolveReviewTarget } from "../lib/codex/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "../lib/codex/process.mjs";
-import { loadPromptTemplate, interpolateTemplate } from "../lib/codex/prompts.mjs";
 import {
   generateJobId,
   getConfig,
@@ -52,8 +47,6 @@ import {
 } from "../lib/codex/tracked-jobs.mjs";
 import { resolveWorkspaceRoot } from "../lib/codex/workspace.mjs";
 import {
-  renderNativeReviewResult,
-  renderReviewResult,
   renderStoredJobResult,
   renderCancelReport,
   renderJobStatusReport,
@@ -63,8 +56,6 @@ import {
 } from "../lib/codex/render.mjs";
 
 const SELF_PATH = fileURLToPath(import.meta.url);
-const ROOT_DIR = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
-const REVIEW_SCHEMA = path.join(ROOT_DIR, "schemas", "review-output.schema.json");
 const DEFAULT_STATUS_WAIT_TIMEOUT_MS = 240000;
 const DEFAULT_STATUS_POLL_INTERVAL_MS = 2000;
 const VALID_REASONING_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh"]);
