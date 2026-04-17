@@ -629,6 +629,8 @@ export function writeRecipes() {
 
   copyDirMerge(resolve(__dir, '..', 'lib'), libStage, { overwrite: true });
 
+  copyFileSync(resolve(__dir, '..', 'package.json'), resolve(dataDir, 'package.json'));
+
   console.log(`  Runtime staged to ${dataDir} (bin/, lib/, ext-agents/)`);
 }
 
