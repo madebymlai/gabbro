@@ -117,9 +117,27 @@ export function findPrinciplesFile(startPath) {
   return existsSync(candidate) ? candidate : null;
 }
 
+export function findClaudeResourcesDir(startPath) {
+  let dir = resolve(startPath);
+  while (true) {
+    const candidate = join(dir, '.claude', 'resources');
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
 function loadAdversarialReviewPrompt(docPath, principlesPath, { resume = false } = {}) {
   const templateName = resume ? 'adversarial-review-resume.md' : 'adversarial-review.md';
-  const templatePath = join(dirname(fileURLToPath(import.meta.url)), '..', 'resources', 'prompts', templateName);
+  const resourcesDir = findClaudeResourcesDir(dirname(docPath));
+  if (!resourcesDir) {
+    throw new Error(`.claude/resources not found — run the gabbro installer in this project first`);
+  }
+  const templatePath = join(resourcesDir, 'prompts', templateName);
+  if (!existsSync(templatePath)) {
+    throw new Error(`Adversarial review template missing: ${templatePath}`);
+  }
   let template = readFileSync(templatePath, 'utf8');
   template = template.replaceAll('{{DOC_PATH}}', docPath);
   template = template.replaceAll('{{PRINCIPLES_PATH}}', principlesPath || '(no principles file configured for this project)');
