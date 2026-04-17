@@ -11,7 +11,7 @@
 // Usage: gabbro run <agent> <target> [-o output] [-p key=value ...]
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, realpathSync, readdirSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, realpathSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
@@ -89,16 +89,6 @@ export function extractReview(jsonStr) {
   throw new Error('No final output: recipe__final_output tool call not found in Goose output');
 }
 
-export function resolvePluginPath(marketplace, plugin) {
-  const pluginDir = join(homedir(), '.claude', 'plugins', 'cache', marketplace, plugin);
-  try {
-    const versions = readdirSync(pluginDir).sort();
-    return join(pluginDir, versions[versions.length - 1]);
-  } catch {
-    return null;
-  }
-}
-
 export function findGabbroDir(startPath) {
   let dir = resolve(startPath);
   while (true) {
@@ -145,11 +135,7 @@ function loadAdversarialReviewPrompt(docPath, principlesPath, { resume = false }
 }
 
 export function runAdversarialReview(docPath, model = DEFAULT_AR_MODEL) {
-  const pluginPath = resolvePluginPath('openai-codex', 'codex');
-  if (!pluginPath) {
-    throw new Error('Codex plugin not found. Install via: claude plugins install codex@openai-codex');
-  }
-  const companionScript = join(pluginPath, 'scripts', 'codex-companion.mjs');
+  const companionScript = fileURLToPath(new URL('./codex-companion.mjs', import.meta.url));
   if (!existsSync(companionScript)) {
     throw new Error(`Codex companion script not found at ${companionScript}`);
   }

@@ -363,9 +363,9 @@ test('installCli creates symlink on Unix', () => {
   process.env.HOME = dir;
   try {
     const dataDir = resolve(dir, '.local', 'share', 'gabbro');
-    const extAgents = resolve(dataDir, 'ext-agents');
-    mkdirSync(extAgents, { recursive: true });
-    writeFileSync(join(extAgents, 'run.mjs'), '#!/usr/bin/env node\n');
+    const binStage = resolve(dataDir, 'bin');
+    mkdirSync(binStage, { recursive: true });
+    writeFileSync(join(binStage, 'run.mjs'), '#!/usr/bin/env node\n');
 
     const binDir = resolve(dir, '.local', 'bin');
     mkdirSync(binDir, { recursive: true });
@@ -478,8 +478,8 @@ test('writeRecipes copies run.mjs with extractReview implementation', () => {
   process.env.HOME = dir;
   try {
     writeRecipes();
-    const extAgents = resolve(dir, '.local', 'share', 'gabbro', 'ext-agents');
-    const content = readFileSync(join(extAgents, 'run.mjs'), 'utf8');
+    const binStage = resolve(dir, '.local', 'share', 'gabbro', 'bin');
+    const content = readFileSync(join(binStage, 'run.mjs'), 'utf8');
     assert.ok(content.includes('extractReview'), 'run.mjs must contain extractReview');
     assert.ok(content.includes('recipe__final_output'), 'run.mjs must handle recipe__final_output');
     assert.ok(content.includes('computeProjectId'), 'run.mjs must contain computeProjectId');

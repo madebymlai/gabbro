@@ -555,30 +555,6 @@ export async function installCodex() {
     console.log('  Codex CLI installed');
   }
 
-  // Register Codex plugin via settings.json — Claude Code auto-installs on next session
-  const settingsPath = resolve('.claude', 'settings.json');
-  let settings = {};
-  if (existsSync(settingsPath)) {
-    settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
-  }
-  let changed = false;
-  if (!settings.extraKnownMarketplaces?.['openai-codex']) {
-    settings.extraKnownMarketplaces ??= {};
-    settings.extraKnownMarketplaces['openai-codex'] = { source: { source: 'github', repo: 'openai/codex-plugin-cc' } };
-    changed = true;
-  }
-  if (!settings.enabledPlugins?.['codex@openai-codex']) {
-    settings.enabledPlugins ??= {};
-    settings.enabledPlugins['codex@openai-codex'] = true;
-    changed = true;
-  }
-  if (changed) {
-    writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-    console.log('  Codex plugin registered in .claude/settings.json');
-  } else {
-    console.log('  Codex plugin already registered');
-  }
-
   // Check if already logged in before prompting
   try {
     const status = execSync('codex login status', { encoding: 'utf8', timeout: 10000 }).trim();
@@ -597,7 +573,10 @@ export async function installCodex() {
 
 export function writeRecipes() {
   const { dataDir } = getPlatformPaths();
+  const binStage = resolve(dataDir, 'bin');
+  const libStage = resolve(dataDir, 'lib');
   const extAgents = resolve(dataDir, 'ext-agents');
+  mkdirSync(binStage, { recursive: true });
   mkdirSync(extAgents, { recursive: true });
 
   const promptsDir = resolve(__dir, '..', 'resources', 'prompts');
@@ -622,18 +601,23 @@ export function writeRecipes() {
 
   writeFileSync(resolve(extAgents, 'pm-ember.yaml'), pmEmber);
 
-  const runMjsSrc = readFileSync(resolve(__dir, 'run.mjs'), 'utf8');
-  writeFileSync(resolve(extAgents, 'run.mjs'), runMjsSrc);
-  if (process.platform !== 'win32') {
-    execSync(`chmod +x "${resolve(extAgents, 'run.mjs')}"`);
-  }
+  const stageExecutable = (srcName, destName = srcName) => {
+    const src = readFileSync(resolve(__dir, srcName), 'utf8');
+    const destPath = resolve(binStage, destName);
+    writeFileSync(destPath, src);
+    if (process.platform !== 'win32') execSync(`chmod +x "${destPath}"`);
+  };
+  stageExecutable('run.mjs');
+  stageExecutable('codex-companion.mjs');
 
-  console.log(`  Recipes written to ${extAgents}`);
+  copyDirMerge(resolve(__dir, '..', 'lib'), libStage, { overwrite: true });
+
+  console.log(`  Runtime staged to ${dataDir} (bin/, lib/, ext-agents/)`);
 }
 
 export function installCli() {
   const { dataDir, binDir } = getPlatformPaths();
-  const runMjsPath = resolve(dataDir, 'ext-agents', 'run.mjs');
+  const runMjsPath = resolve(dataDir, 'bin', 'run.mjs');
   const isWin = process.platform === 'win32';
 
   mkdirSync(binDir, { recursive: true });
@@ -716,11 +700,6 @@ async function main() {
   ensureUserSettings({
     env: { CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' },
     permissions: { defaultMode: 'bypassPermissions' },
-    skillOverrides: {
-      'codex:gpt-5-4-prompting': 'off',
-      'codex:codex-cli-runtime': 'off',
-      'codex:codex-result-handling': 'off',
-    },
   });
 
   // Project setup
