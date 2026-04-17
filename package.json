@@ -5,6 +5,7 @@
   "bin": "bin/install.mjs",
   "files": [
     "bin/",
+    "lib/",
     "skills/",
     "agents/",
     "resources/"
