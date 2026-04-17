@@ -716,6 +716,11 @@ async function main() {
   ensureUserSettings({
     env: { CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' },
     permissions: { defaultMode: 'bypassPermissions' },
+    skillOverrides: {
+      'codex:gpt-5-4-prompting': 'off',
+      'codex:codex-cli-runtime': 'off',
+      'codex:codex-result-handling': 'off',
+    },
   });
 
   // Project setup
