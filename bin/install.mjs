@@ -592,34 +592,6 @@ export async function installCodex() {
       console.log('  Codex login failed or was skipped. Run `codex login` manually.');
     }
   }
-
-  configureCodexProjectTrust(process.cwd());
-}
-
-export function configureCodexProjectTrust(projectPath) {
-  // Codex auto-rejects MCP tool calls under approval_policy=never unless the
-  // project is marked trusted + full-auto. gabbro ar runs with that policy,
-  // so MCPs configured in ~/.codex/config.toml (e.g. codebase-memory-mcp)
-  // fail silently without this.
-  const configPath = resolve(homedir(), '.codex', 'config.toml');
-  const header = `[projects.${JSON.stringify(projectPath)}]`;
-  const block = `\n${header}\ntrust_level = "trusted"\nfull-auto = true\n`;
-
-  if (!existsSync(configPath)) {
-    mkdirSync(dirname(configPath), { recursive: true });
-    writeFileSync(configPath, block.trimStart());
-    console.log(`  Codex: trusted ${projectPath} (new config at ${configPath})`);
-    return;
-  }
-
-  const existing = readFileSync(configPath, 'utf8');
-  if (existing.includes(header)) {
-    console.log(`  Codex: ${projectPath} already registered in config.toml`);
-    return;
-  }
-  const sep = existing.endsWith('\n') ? '' : '\n';
-  writeFileSync(configPath, existing + sep + block);
-  console.log(`  Codex: trusted ${projectPath} in ${configPath}`);
 }
 
 
