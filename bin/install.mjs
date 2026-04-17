@@ -543,15 +543,21 @@ function buildRecipe({ title, description, model, parameters, instructions, prom
   ].join('\n');
 }
 
+const CODEX_VERSION = '0.116.0';
+
 export async function installCodex() {
   console.log('\nInstalling Codex...');
 
   const installed = getInstalledVersion('codex');
-  if (installed) {
+  if (installed === CODEX_VERSION) {
     console.log(`  Codex CLI ${installed} already installed`);
   } else {
-    console.log('  Installing Codex CLI via npm...');
-    execSync('npm install -g @openai/codex', { stdio: 'inherit' });
+    if (installed) {
+      console.log(`  Codex CLI ${installed} present; pinning to ${CODEX_VERSION} (last version with working AppServer MCP)`);
+    } else {
+      console.log(`  Installing Codex CLI ${CODEX_VERSION} via npm (pinned: AppServer MCP regressed in 0.117.0+)`);
+    }
+    execSync(`npm install -g @openai/codex@${CODEX_VERSION}`, { stdio: 'inherit' });
     console.log('  Codex CLI installed');
   }
 
