@@ -543,21 +543,32 @@ function buildRecipe({ title, description, model, parameters, instructions, prom
   ].join('\n');
 }
 
-const CODEX_VERSION = '0.116.0';
+// ─── CODEX VERSION PIN — REMOVE WHEN UPSTREAM FIXES #16911 ──────────────────
+// Codex 0.117.0+ auto-rejects MCP tool calls in AppServer mode regardless of
+// approvalPolicy / config.toml settings. 0.116.0 is the last working version.
+// To unpin: delete this block and revert installCodex() to plain
+//   `npm install -g @openai/codex` (no version).
+// Track: https://github.com/openai/codex/issues/16911
+const CODEX_PIN = { version: '0.116.0', reason: 'AppServer MCP works' };
+// ────────────────────────────────────────────────────────────────────────────
 
 export async function installCodex() {
   console.log('\nInstalling Codex...');
 
   const installed = getInstalledVersion('codex');
-  if (installed === CODEX_VERSION) {
+  const target = CODEX_PIN ? `@${CODEX_PIN.version}` : '';
+  const want = CODEX_PIN?.version;
+  if (installed && (!want || installed === want)) {
     console.log(`  Codex CLI ${installed} already installed`);
   } else {
-    if (installed) {
-      console.log(`  Codex CLI ${installed} present; pinning to ${CODEX_VERSION} (last version with working AppServer MCP)`);
+    if (installed && want) {
+      console.log(`  Codex CLI ${installed} present; pinning to ${want} (${CODEX_PIN.reason})`);
+    } else if (want) {
+      console.log(`  Installing Codex CLI ${want} (pinned: ${CODEX_PIN.reason})`);
     } else {
-      console.log(`  Installing Codex CLI ${CODEX_VERSION} via npm (pinned: AppServer MCP regressed in 0.117.0+)`);
+      console.log('  Installing Codex CLI via npm...');
     }
-    execSync(`npm install -g @openai/codex@${CODEX_VERSION}`, { stdio: 'inherit' });
+    execSync(`npm install -g @openai/codex${target}`, { stdio: 'inherit' });
     console.log('  Codex CLI installed');
   }
 
