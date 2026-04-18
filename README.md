@@ -36,7 +36,7 @@ User approves once at `/solve`. Everything after auto-chains. `/ar` loops up to 
 
 **Tooling the installer sets up**:
 
-- [Codex CLI](https://github.com/openai/codex) + [codex-plugin-cc](https://github.com/openai/codex-plugin-cc) - adversarial design review via GPT-5.4
+- [Codex CLI](https://github.com/openai/codex) - adversarial design review via GPT-5.4
 - [tokf](https://github.com/mpecan/tokf) - compresses noisy CLI output so agents see signal, not noise (Linux/macOS only)
 - [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) - code knowledge graph for structural queries
 - [Context7](https://github.com/upstash/context7) - live library documentation lookup
