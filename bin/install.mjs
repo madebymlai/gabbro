@@ -719,6 +719,7 @@ async function main() {
   ensureUserSettings({
     env: { CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' },
     permissions: { defaultMode: 'bypassPermissions' },
+    attribution: { commit: '', pr: '' },
   });
 
   // Project setup
